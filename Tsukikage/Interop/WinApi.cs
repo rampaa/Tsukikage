@@ -417,25 +417,21 @@ internal static partial class WinApi
     public static Process? GetProcessByWindowClassName(string windowClassName)
     {
         nint windowHandle = FindWindow(windowClassName);
-        return windowHandle is not 0
-            ? GetProcessByWindowHandle(windowHandle)
-            : null;
-    }
-
-    public static Process? GetProcessByWindowHandle(nint windowHandle)
-    {
-        uint threadId = GetWindowThreadProcessId(windowHandle, out uint pid);
-        if (threadId is not 0)
+        if (windowHandle is not 0)
         {
-            try
+            uint threadId = GetWindowThreadProcessId(windowHandle, out uint pid);
+            if (threadId is not 0)
             {
-                Process process = Process.GetProcessById((int)pid);
-                process.EnableRaisingEvents = true;
-                return process;
-            }
-            catch (ArgumentException)
-            {
-                return null;
+                try
+                {
+                    Process process = Process.GetProcessById((int)pid);
+                    process.EnableRaisingEvents = true;
+                    return process;
+                }
+                catch (ArgumentException)
+                {
+                    return null;
+                }
             }
         }
 
