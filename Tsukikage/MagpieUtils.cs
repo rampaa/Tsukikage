@@ -125,6 +125,11 @@ internal static class MagpieUtils
 
     public static bool IsMouseDirectlyOver(Point rawMousePosition, Point modifiedMousePosition, nint windowHandle)
     {
+        if (WinApi.GetTopmostWindow() == windowHandle)
+        {
+            return true;
+        }
+
         nint windowHandleAtPoint = WinApi.GetWindowHandleFromPoint(rawMousePosition);
         return windowHandleAtPoint is not 0
                 && (rawMousePosition == modifiedMousePosition

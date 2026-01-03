@@ -153,6 +153,10 @@ internal static partial class WinApi
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial nint FindWindowW(string? lpClassName, string? lpWindowName);
 
+        [LibraryImport("user32.dll", EntryPoint = "GetForegroundWindow")]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        public static partial nint GetForegroundWindow();
+
         [LibraryImport("user32.dll", EntryPoint = "GetWindowThreadProcessId", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
@@ -417,25 +421,34 @@ internal static partial class WinApi
     public static Process? GetProcessByWindowClassName(string windowClassName)
     {
         nint windowHandle = FindWindow(windowClassName);
-        if (windowHandle is not 0)
+        return windowHandle is not 0
+            ? GetProcessByWindowHandle(windowHandle)
+            : null;
+    }
+
+    public static Process? GetProcessByWindowHandle(nint windowHandle)
+    {
+        uint threadId = GetWindowThreadProcessId(windowHandle, out uint pid);
+        if (threadId is not 0)
         {
-            uint threadId = GetWindowThreadProcessId(windowHandle, out uint pid);
-            if (threadId is not 0)
+            try
             {
-                try
-                {
-                    Process process = Process.GetProcessById((int)pid);
-                    process.EnableRaisingEvents = true;
-                    return process;
-                }
-                catch (ArgumentException)
-                {
-                    return null;
-                }
+                Process process = Process.GetProcessById((int)pid);
+                process.EnableRaisingEvents = true;
+                return process;
+            }
+            catch (ArgumentException)
+            {
+                return null;
             }
         }
 
         return null;
+    }
+
+    public static nint GetTopmostWindow()
+    {
+        return GetForegroundWindow();
     }
 
     public static void RunMessageLoop()

@@ -276,7 +276,7 @@ internal static class OcrUtils
         {
             if (ocrResult.WindowHandle is not 0)
             {
-                if (MagpieUtils.IsMouseDirectlyOver(rawMousePosition, mousePosition, ocrResult.WindowHandle))
+                if (!MagpieUtils.IsMouseDirectlyOver(rawMousePosition, mousePosition, ocrResult.WindowHandle))
                 {
                     if (s_mouseWasOverWordBoundingBox)
                     {
