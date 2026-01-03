@@ -25,8 +25,8 @@ internal static class MagpieUtils
     private static Rectangle MagpieWindowRect { get; set; }
     // public static nint SourceWindowHandle { get; set; }
 
-    private static double s_scaleFactorX;
-    private static double s_scaleFactorY;
+    private static float s_scaleFactorX;
+    private static float s_scaleFactorY;
 
     public static void Init()
     {
@@ -115,8 +115,8 @@ internal static class MagpieUtils
             return mousePosition;
         }
 
-        Point virtualMousePosition = new(double.ConvertToIntegerNative<int>(s_sourceWindowRect.X + ((mousePosition.X - MagpieWindowRect.X) / s_scaleFactorX)),
-            double.ConvertToIntegerNative<int>(s_sourceWindowRect.Y + ((mousePosition.Y - MagpieWindowRect.Y) / s_scaleFactorY)));
+        Point virtualMousePosition = new(float.ConvertToIntegerNative<int>(s_sourceWindowRect.X + ((mousePosition.X - MagpieWindowRect.X) / s_scaleFactorX)),
+            float.ConvertToIntegerNative<int>(s_sourceWindowRect.Y + ((mousePosition.Y - MagpieWindowRect.Y) / s_scaleFactorY)));
 
         return !s_sourceWindowRect.Contains(virtualMousePosition) || WinApi.GetWindowFromPoint(mousePosition) != s_magpieWindowHandle
             ? mousePosition
@@ -160,8 +160,8 @@ internal static class MagpieUtils
         int sourceWindowHeight = sourceWindowBottomEdgePosition - sourceWindowTopEdgePosition;
         s_sourceWindowRect = new Rectangle(sourceWindowLeftEdgePosition, sourceWindowTopEdgePosition, sourceWindowWidth, sourceWindowHeight);
 
-        s_scaleFactorX = (double)magpieWindowWidth / sourceWindowWidth;
-        s_scaleFactorY = (double)magpieWindowHeight / sourceWindowHeight;
+        s_scaleFactorX = (float)magpieWindowWidth / sourceWindowWidth;
+        s_scaleFactorY = (float)magpieWindowHeight / sourceWindowHeight;
         // SourceWindowHandle = GetSourceWindowHande(lParam);
     }
 }

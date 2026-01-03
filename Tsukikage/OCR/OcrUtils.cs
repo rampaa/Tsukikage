@@ -194,7 +194,7 @@ internal static class OcrUtils
     {
         try
         {
-            OwocrOcrResult? owocrOcrResult = text.StartsWith('{')
+            OwocrOcrResult? owocrOcrResult = text[0] is '{'
                 ? JsonSerializer.Deserialize(text, OcrResultJsonContext.Default.OwocrOcrResult)
                 : null;
 
