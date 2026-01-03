@@ -424,7 +424,9 @@ internal static partial class WinApi
             {
                 try
                 {
-                    return Process.GetProcessById((int)pid);
+                    Process process = Process.GetProcessById((int)pid);
+                    process.EnableRaisingEvents = true;
+                    return process;
                 }
                 catch (ArgumentException)
                 {

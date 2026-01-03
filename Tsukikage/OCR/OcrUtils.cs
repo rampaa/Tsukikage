@@ -164,6 +164,8 @@ internal static class OcrUtils
             owocrProcess.Exited -= OwocrProcess_Exited;
             owocrProcess.Dispose();
         }
+
+        SendEmptyString();
     }
 
     private static void RebuildOcrResult(Paragraph paragraph)
@@ -327,15 +329,20 @@ internal static class OcrUtils
 
         if (mouseIsNotOverAnyLines && s_mouseWasOverWordBoundingBox)
         {
-            s_mouseWasOverWordBoundingBox = false;
-            if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
-            {
-                WebsocketServerUtils.Broadcast("");
-            }
-            else // if (ConfigManager.OutputIpcMethod is OutputIpcMethod.Clipboard)
-            {
-                WinApi.SetClipboardText("");
-            }
+            SendEmptyString();
+        }
+    }
+
+    private static void SendEmptyString()
+    {
+        s_mouseWasOverWordBoundingBox = false;
+        if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
+        {
+            WebsocketServerUtils.Broadcast("");
+        }
+        else // if (ConfigManager.OutputIpcMethod is OutputIpcMethod.Clipboard)
+        {
+            WinApi.SetClipboardText("");
         }
     }
 
