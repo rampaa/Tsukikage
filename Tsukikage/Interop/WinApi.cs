@@ -309,7 +309,7 @@ internal static partial class WinApi
         return FindWindowW(lpClassName, null);
     }
 
-    public static nint GetWindowFromPoint(Point point)
+    public static nint GetWindowHandleFromPoint(Point point)
     {
         return WindowFromPoint(point);
     }

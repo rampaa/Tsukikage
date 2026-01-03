@@ -17,7 +17,8 @@ internal static class MapperUtils
             paragraphs[i] = owocrParagraph.ToParagraph(owocrOcrResult.ImageProperties);
         }
 
-        return new OcrResult(owocrOcrResult.ImageProperties.ToRectangle(), paragraphs);
+        Debug.Assert(owocrOcrResult.ImageProperties.WindowHandle is not null);
+        return new OcrResult(owocrOcrResult.ImageProperties.ToRectangle(), owocrOcrResult.ImageProperties.WindowHandle.Value, paragraphs);
     }
 
     private static Rectangle ToRectangle(this OwocrImageProperties owocrImageProperties)

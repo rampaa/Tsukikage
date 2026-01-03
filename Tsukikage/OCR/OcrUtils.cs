@@ -26,6 +26,9 @@ internal static class OcrUtils
     private const string OwocrWindowClassName = "ClipboardHook";
     private static Process? s_owocrProcess;
 
+    private static int s_ocredWindHandle;
+    private static Process? s_ocredProcess;
+
     public static void ProcessWebSocketText(string text, bool isTextFromTextHooker)
     {
         OcrResult? ocrResult;
@@ -154,6 +157,26 @@ internal static class OcrUtils
         }
     }
 
+    private static void OcredWindowProcess_Exited(object? sender, EventArgs e)
+    {
+        HandleOcredWindowProcessExit();
+    }
+
+    private static void HandleOcredWindowProcessExit()
+    {
+        s_ocrResult = null;
+        s_ocredWindHandle = 0;
+        Process? ocredProcess = s_ocredProcess;
+        if (ocredProcess is not null)
+        {
+            s_ocredProcess = null;
+            ocredProcess.Exited -= OcredWindowProcess_Exited;
+            ocredProcess.Dispose();
+        }
+
+        SendEmptyString();
+    }
+
     private static void OwocrProcess_Exited(object? sender, EventArgs e)
     {
         s_ocrResult = null;
@@ -200,7 +223,35 @@ internal static class OcrUtils
                 ? JsonSerializer.Deserialize(text, OcrResultJsonContext.Default.OwocrOcrResult)
                 : null;
 
-            return owocrOcrResult?.ToOcrResult();
+            OcrResult? ocrResult = owocrOcrResult?.ToOcrResult();
+            if (ocrResult is not null)
+            {
+                int ocredWindowHandle = ocrResult.WindowHandle;
+                if (ocredWindowHandle is not 0)
+                {
+                    if (ocredWindowHandle != s_ocredWindHandle)
+                    {
+                        if (s_ocredProcess is not null)
+                        {
+                            HandleOcredWindowProcessExit();
+                        }
+
+                        s_ocredWindHandle = ocredWindowHandle;
+                        Process? ocredWindowProcess = WinApi.GetProcessByWindowHandle(s_ocredWindHandle);
+                        s_ocredProcess = ocredWindowProcess;
+                        if (ocredWindowProcess is not null)
+                        {
+                            ocredWindowProcess.Exited += OcredWindowProcess_Exited;
+                        }
+                    }
+                }
+                else if (s_ocredWindHandle is not 0)
+                {
+                    HandleOcredWindowProcessExit();
+                }
+            }
+
+            return ocrResult;
         }
         catch (JsonException ex)
         {
@@ -210,7 +261,7 @@ internal static class OcrUtils
         }
     }
 
-    public static void HandleMouseMove(Point mousePosition)
+    public static void HandleMouseMove(Point rawMousePosition)
     {
         OcrResult? ocrResult = s_ocrResult;
         if (ocrResult is null)
@@ -219,10 +270,23 @@ internal static class OcrUtils
         }
 
         Rectangle imageProperties = ocrResult.ImageProperties;
-        mousePosition = MagpieUtils.GetMousePosition(mousePosition);
+        Point mousePosition = MagpieUtils.GetMousePosition(rawMousePosition);
         bool mouseIsNotOverAnyLines = true;
         if (imageProperties.Contains(mousePosition))
         {
+            if (ocrResult.WindowHandle is not 0)
+            {
+                if (MagpieUtils.IsMouseDirectlyOver(rawMousePosition, mousePosition, ocrResult.WindowHandle))
+                {
+                    if (s_mouseWasOverWordBoundingBox)
+                    {
+                        SendEmptyString();
+                    }
+
+                    return;
+                }
+            }
+
             for (int paragraphIndex = 0; paragraphIndex < ocrResult.Paragraphs.Length; paragraphIndex++)
             {
                 Paragraph paragraph = ocrResult.Paragraphs[paragraphIndex];

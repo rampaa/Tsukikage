@@ -8,7 +8,7 @@ internal static class MagpieUtils
     private static bool IsMagpieScaling { get; set; }
     public static int MagpieScalingChangedWindowMessage { get; private set; } = -1;
 
-    private static nint s_magpieWindowHandle;
+    public static nint MagpieWindowHandle { get; private set; }
 
     private static Process? s_magpieProcess;
 
@@ -23,7 +23,7 @@ internal static class MagpieUtils
     public static void Init()
     {
         nint magpieWindowHandle = GetMagpieWindowHandle();
-        s_magpieWindowHandle = magpieWindowHandle;
+        MagpieWindowHandle = magpieWindowHandle;
 
         bool isMagpieScaling = magpieWindowHandle is not 0;
         IsMagpieScaling = isMagpieScaling;
@@ -100,9 +100,18 @@ internal static class MagpieUtils
         Point virtualMousePosition = new(float.ConvertToIntegerNative<int>(s_sourceWindowRect.X + ((mousePosition.X - MagpieWindowRect.X) / s_scaleFactorX)),
             float.ConvertToIntegerNative<int>(s_sourceWindowRect.Y + ((mousePosition.Y - MagpieWindowRect.Y) / s_scaleFactorY)));
 
-        return !s_sourceWindowRect.Contains(virtualMousePosition) || WinApi.GetWindowFromPoint(mousePosition) != s_magpieWindowHandle
+        return !s_sourceWindowRect.Contains(virtualMousePosition) || WinApi.GetWindowHandleFromPoint(mousePosition) != MagpieWindowHandle
             ? mousePosition
             : virtualMousePosition;
+    }
+
+    public static bool IsMouseDirectlyOver(Point rawMousePosition, Point modifiedMousePosition, nint windowHandle)
+    {
+        nint windowHandleAtPoint = WinApi.GetWindowHandleFromPoint(rawMousePosition);
+        return windowHandleAtPoint is not 0
+                && (rawMousePosition == modifiedMousePosition
+                    ? windowHandleAtPoint == windowHandle
+                    : windowHandleAtPoint == MagpieWindowHandle || WinApi.GetWindowHandleFromPoint(modifiedMousePosition) != MagpieWindowHandle);
     }
 
     public static void SetMagpieInfo(nint wParam, nint lParam)
@@ -111,7 +120,7 @@ internal static class MagpieUtils
         {
             nint magpieWindowHandle = GetMagpieWindowHandle();
 
-            s_magpieWindowHandle = magpieWindowHandle;
+            MagpieWindowHandle = magpieWindowHandle;
             s_magpieProcess = WinApi.GetProcessByWindowHandle(magpieWindowHandle);
             if (s_magpieProcess is not null)
             {
@@ -126,7 +135,7 @@ internal static class MagpieUtils
         else if (wParam is 1 or 2)
         {
             IsMagpieScaling = true;
-            SetMagpieInfo(wParam is 1 ? lParam : s_magpieWindowHandle);
+            SetMagpieInfo(wParam is 1 ? lParam : MagpieWindowHandle);
         }
     }
 
