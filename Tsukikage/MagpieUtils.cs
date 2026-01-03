@@ -1,24 +1,16 @@
+using System.Diagnostics;
 using Tsukikage.Interop;
 
 namespace Tsukikage;
 
 internal static class MagpieUtils
 {
-    private static bool s_isMagpieScaling;
-
+    private static bool IsMagpieScaling { get; set; }
     public static int MagpieScalingChangedWindowMessage { get; private set; } = -1;
 
     private static nint s_magpieWindowHandle;
 
-    private static bool IsMagpieScaling()
-    {
-        if (s_isMagpieScaling)
-        {
-            s_isMagpieScaling = IsMagpieReallyScaling();
-        }
-
-        return s_isMagpieScaling;
-    }
+    private static Process? s_magpieProcess;
 
     private static Rectangle s_sourceWindowRect;
 
@@ -31,9 +23,10 @@ internal static class MagpieUtils
     public static void Init()
     {
         nint magpieWindowHandle = GetMagpieWindowHandle();
+        s_magpieWindowHandle = magpieWindowHandle;
 
         bool isMagpieScaling = magpieWindowHandle is not 0;
-        s_isMagpieScaling = isMagpieScaling;
+        IsMagpieScaling = isMagpieScaling;
 
         if (isMagpieScaling)
         {
@@ -92,17 +85,6 @@ internal static class MagpieUtils
     //    return WinApi.GetProp(windowHandle, "Magpie.SrcHWND");
     //}
 
-    /// <summary>
-    /// If Magpie crashes or is killed during the process of scaling a window, the MagpieScalingChangedWindowMessage will not be received.
-    /// Consequently, IsMagpieScaling may not be set to false.
-    /// To ensure Magpie is still running, this method must be used to re-check whether any window is currently being scaled by Magpie.
-    /// </summary>
-    private static bool IsMagpieReallyScaling()
-    {
-        s_magpieWindowHandle = GetMagpieWindowHandle();
-        return s_magpieWindowHandle is not 0;
-    }
-
     private static nint GetMagpieWindowHandle()
     {
         return WinApi.FindWindow("Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22");
@@ -110,7 +92,7 @@ internal static class MagpieUtils
 
     public static Point GetMousePosition(Point mousePosition)
     {
-        if (!IsMagpieScaling() || !MagpieWindowRect.Contains(mousePosition))
+        if (!IsMagpieScaling || !MagpieWindowRect.Contains(mousePosition))
         {
             return mousePosition;
         }
@@ -125,14 +107,38 @@ internal static class MagpieUtils
 
     public static void SetMagpieInfo(nint wParam, nint lParam)
     {
+        if (s_magpieProcess is null)
+        {
+            nint magpieWindowHandle = GetMagpieWindowHandle();
+
+            s_magpieWindowHandle = magpieWindowHandle;
+            s_magpieProcess = WinApi.GetProcessByWindowHandle(magpieWindowHandle);
+            if (s_magpieProcess is not null)
+            {
+                s_magpieProcess.Exited += MagpieProcess_Exited;
+            }
+        }
+
         if (wParam is 0)
         {
-            s_isMagpieScaling = lParam is 1;
+            IsMagpieScaling = lParam is 1;
         }
         else if (wParam is 1 or 2)
         {
-            s_isMagpieScaling = true;
+            IsMagpieScaling = true;
             SetMagpieInfo(wParam is 1 ? lParam : s_magpieWindowHandle);
+        }
+    }
+
+    private static void MagpieProcess_Exited(object? sender, EventArgs e)
+    {
+        Process? magpieProcess = s_magpieProcess;
+        IsMagpieScaling = false;
+        if (magpieProcess is not null)
+        {
+            s_magpieProcess = null;
+            magpieProcess.Exited -= MagpieProcess_Exited;
+            magpieProcess.Dispose();
         }
     }
 
