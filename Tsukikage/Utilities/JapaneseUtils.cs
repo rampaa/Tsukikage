@@ -19,7 +19,8 @@ internal static class JapaneseUtils
         new('バ', 'ハ'), new('ビ', 'ヒ'), new('ブ', 'フ'), new('ベ', 'ヘ'), new('ボ', 'ホ'),
         new('パ', 'ハ'), new('ピ', 'ヒ'), new('プ', 'フ'), new('ペ', 'ヘ'), new('ポ', 'ホ'),
         new('ゔ', 'う'), new('ヴ', 'ウ'), new('ゞ', 'ゝ'), new('ヾ', 'ヽ'),
-        new('ヸ', 'ヰ'), new('ヹ', 'ヱ'), new('ヺ', 'ヲ')
+        new('ヸ', 'ヰ'), new('ヹ', 'ヱ'), new('ヺ', 'ヲ'),
+        new('カ', 'か'), new('リ', 'り'), new('一', 'ー')
         // ReSharper restore BadExpressionBracesLineBreaks
         #pragma warning restore format
     }.ToFrozenDictionary();
@@ -65,6 +66,8 @@ internal static class JapaneseUtils
 
         new('｛','{'), new('｜','|'), new('｝','}'), new('～','~'),
         new('｡','。'), new('｢','「'), new('｣','」'), new('､','、'), new('･','・'),
+        new('『','「'), new('』','」'), new('【','['), new('】',']'),
+        new('〈','<'), new('〉','>'), new('《','<'), new('》','>'),
 
         new('ｦ','ヲ'),
         new('ｧ','ァ'), new('ｨ','ィ'), new('ｩ','ゥ'), new('ｪ','ェ'), new('ｫ','ォ'),
@@ -96,8 +99,18 @@ internal static class JapaneseUtils
         new('·', '・'), new('•', '・'),
         new('　', ' '),
         new('“', '"'), new('”', '"'), new('‘', '\''), new('’', '\''),
-        new('⋯', '…'), new('ー', '一'),
+        new('⋯', '…'),
         new('｟', '('), new('｠', ')'),
+        new('Ⅰ', 'I'), new('Ⅴ', 'V'), new('Ⅹ', 'X'),
+
+        new('〔','['), new('〕',']'), new('〖','['), new('〗',']'),
+        new('〘','('), new('〙',')'), new('│','|'), new('┃','|'),
+        new('∕','/'), new('⁄','/'), new('‟','"'),
+
+        new('ヘ', 'へ'), new('ベ', 'べ'), new('ペ', 'ぺ'), new('丶', '、'), new('゠', '＝'),
+        new('⧸', '/'),
+        new('╱', '/'),
+
         // ReSharper restore BadExpressionBracesLineBreaks
         #pragma warning restore format
     }.ToFrozenDictionary();

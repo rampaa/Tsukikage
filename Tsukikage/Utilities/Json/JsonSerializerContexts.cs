@@ -5,16 +5,16 @@ using Tsukikage.OCR.OwOCR;
 
 namespace Tsukikage.Utilities.Json;
 
-[JsonSerializable(typeof(OcrResult))]
-[JsonSerializable(typeof(WordInfo))]
+[JsonSerializable(typeof(OwocrOcrResult))]
+[JsonSerializable(typeof(GraphemeInfo))]
 internal sealed partial class OcrResultJsonContext : JsonSerializerContext
 {
     static OcrResultJsonContext()
     {
-        Default = new OcrResultJsonContext(CreateJsonSerializerOptions(Default));
+        Default = new OcrResultJsonContext(CreateJsonSerializerOptions());
     }
 
-    private static JsonSerializerOptions CreateJsonSerializerOptions(OcrResultJsonContext defaultContext)
+    private static JsonSerializerOptions CreateJsonSerializerOptions()
     {
         return JsonOptions.s_jsoWithEnumConverter;
     }

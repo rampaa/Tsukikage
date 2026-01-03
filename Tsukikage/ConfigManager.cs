@@ -28,13 +28,14 @@ internal static class ConfigManager
     private const string OutputTypeComment =
         """
         ; Specifies the type of output the program sends.
-        ; Default value: WordInfo
+        ; Default value: GraphemeInfo
         ; Possible values and their meaning:
-        ; WordInfo                 : JSON containing the start index of the current word within the current paragraph, the current paragraph, and the text direction
+        ; GraphemeInfo             : JSON containing the start index of the current grapheme within the current paragraph, the current paragraph, and the text direction
         ; Paragraph                : The paragraph at the current mouse position
-        ; TextStartingFromPosition : Text from the current mouse position to the end of the current paragraph
+        ; TextStartingFromPosition : Text starting from the current mouse position to the end of the current paragraph
         ; Line                     : The line at the current mouse position
         ; Word                     : The word at the current mouse position
+        ; Grapheme                 : The grapheme at the current mouse position
         """;
 
     private const string OutputIpcMethodComment =
@@ -63,14 +64,13 @@ internal static class ConfigManager
 
         [{OutputSection}]
         {OutputTypeComment}
-        {nameof(OutputType)} = WordInfo
+        {nameof(OutputType)} = GraphemeInfo
 
         {OutputIpcMethodComment}
         {nameof(OutputIpcMethod)} = WebSocket
 
         {OutputWebSocketAddressComment}
         {nameof(OutputWebSocketAddress)} = {DefaultOutputWebSocketAddress}
-        
         """;
 
     #endregion
@@ -80,7 +80,7 @@ internal static class ConfigManager
 
     public static Uri OcrJsonInputWebSocketAddress { get; private set; } = new(DefaultOcrJsonInputWebSocketAddress, UriKind.Absolute);
     public static Uri? TextHookerWebSocketAddress { get; private set; } // = null;
-    public static OutputPayload OutputType { get; private set; } = OutputPayload.WordInfo;
+    public static OutputPayload OutputType { get; private set; } = OutputPayload.GraphemeInfo;
     public static OutputIpcMethod OutputIpcMethod { get; private set; } = OutputIpcMethod.WebSocket;
     public static Uri OutputWebSocketAddress { get; private set; } = new(DefaultOutputWebSocketAddress, UriKind.Absolute);
 
@@ -119,7 +119,7 @@ internal static class ConfigManager
         Setting setting = section[key];
         string valueFromConfig = setting.RawValue;
 
-        // If setting count increased that means the key did not exists before
+        // If setting count increased that means the key did not exist before
         if (section.SettingCount > settingCount)
         {
             if (writeToFileIfMissing)
@@ -151,7 +151,7 @@ internal static class ConfigManager
         Setting setting = section[key];
         string valueFromConfig = setting.RawValue;
 
-        // If setting count increased that means the key did not exists before
+        // If setting count increased that means the key did not exist before
         if (section.SettingCount > settingCount)
         {
             setting.RawValue = defaultValue.ToString();
@@ -175,8 +175,8 @@ internal static class ConfigManager
             Current configs:
             OCR JSON Input WebSocket Address: {OcrJsonInputWebSocketAddress.OriginalString}
             Text hooker WebSocket AAddress: {TextHookerWebSocketAddress?.OriginalString ?? "Disabled"}
-            Output Type: WordInfo
-            Output Method: WebSocket
+            Output Type: {OutputType}
+            Output Method: {OutputIpcMethod}
             Output WebSocket Address: {DefaultOutputWebSocketAddress}
             """;
     }

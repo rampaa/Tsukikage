@@ -14,7 +14,7 @@ internal static class JsonOptions
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         Converters =
         {
-            new JsonStringEnumConverter<WritingDirection>()
+            new JsonStringEnumConverter<OwocrWritingDirection>()
         }
     };
 }

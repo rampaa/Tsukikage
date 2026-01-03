@@ -2,10 +2,11 @@ namespace Tsukikage.OCR;
 
 internal enum OutputPayload
 {
-    WordInfo = 0,
+    GraphemeInfo = 0,
     Paragraph,
     TextStartingFromPosition,
     Line,
+    Word,
     // ReSharper disable once UnusedMember.Global
-    Word
+    Grapheme
 }

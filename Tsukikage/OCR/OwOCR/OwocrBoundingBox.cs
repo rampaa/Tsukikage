@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace Tsukikage.OCR;
+namespace Tsukikage.OCR.OwOCR;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-internal sealed class BoundingBox(float centerX, float centerY, float width, float height, float? rotationZ) : IEquatable<BoundingBox>
+internal sealed class OwocrBoundingBox(float centerX, float centerY, float width, float height, float? rotationZ) : IEquatable<OwocrBoundingBox>
 {
     [JsonPropertyName("center_x")] public float CenterX { get; } = centerX;
     [JsonPropertyName("center_y")] public float CenterY { get; } = centerY;
@@ -13,8 +13,8 @@ internal sealed class BoundingBox(float centerX, float centerY, float width, flo
     // ReSharper disable once MemberCanBePrivate.Global
     [JsonPropertyName("rotation_z")] public float? RotationZ { get; } = rotationZ;
 
-    [JsonIgnore] public float CosInverseRotation { get; } = MathF.Cos(-rotationZ ?? 0);
-    [JsonIgnore] public float SinInverseRotation { get; } = MathF.Sin(-rotationZ ?? 0);
+    [JsonIgnore] public float CosNegativeRotation { get; } = MathF.Cos(-rotationZ ?? 0);
+    [JsonIgnore] public float SinNegativeRotation { get; } = MathF.Sin(-rotationZ ?? 0);
 
     public override int GetHashCode()
     {
@@ -24,7 +24,7 @@ internal sealed class BoundingBox(float centerX, float centerY, float width, flo
     public override bool Equals(object? obj)
     {
         // ReSharper disable CompareOfFloatsByEqualityOperator
-        return obj is BoundingBox other
+        return obj is OwocrBoundingBox other
             && CenterX == other.CenterX
             && CenterY == other.CenterY
             && Width == other.Width
@@ -33,7 +33,7 @@ internal sealed class BoundingBox(float centerX, float centerY, float width, flo
         // ReSharper restore CompareOfFloatsByEqualityOperator
     }
 
-    public bool Equals(BoundingBox? other)
+    public bool Equals(OwocrBoundingBox? other)
     {
         // ReSharper disable CompareOfFloatsByEqualityOperator
         return other is not null
@@ -45,7 +45,6 @@ internal sealed class BoundingBox(float centerX, float centerY, float width, flo
         // ReSharper restore CompareOfFloatsByEqualityOperator
     }
 
-    public static bool operator ==(BoundingBox? left, BoundingBox? right) => left?.Equals(right) ?? (right is null);
-
-    public static bool operator !=(BoundingBox? left, BoundingBox? right) => left?.Equals(right) ?? right is not null;
+    public static bool operator ==(OwocrBoundingBox? left, OwocrBoundingBox? right) => left?.Equals(right) ?? (right is null);
+    public static bool operator !=(OwocrBoundingBox? left, OwocrBoundingBox? right) => left?.Equals(right) ?? right is not null;
 }

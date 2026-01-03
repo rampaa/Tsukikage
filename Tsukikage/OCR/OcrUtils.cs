@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Tsukikage.Interop;
 using Tsukikage.OCR.OwOCR;
+using Tsukikage.OCR.Tsukikage;
 using Tsukikage.Utilities;
 using Tsukikage.Utilities.Json;
 using Tsukikage.Websocket;
@@ -16,7 +18,10 @@ internal static class OcrUtils
 
     private static readonly LinkedList<string> s_textHookerTextBacklog = [];
 
-    private static bool s_lastTimeFoundText; // = false;
+    private static bool s_mouseWasOverWordBoundingBox; // = false
+
+    private static bool s_textHookerTextChanged; // = false
+    private static bool s_ocrTextChanged; // = false
 
     public static void ProcessWebSocketText(string text, bool isTextFromTextHooker)
     {
@@ -30,6 +35,7 @@ internal static class OcrUtils
 
             s_ocrResult = ocrResult;
             textHookerTextNode = s_textHookerTextBacklog.First;
+            s_ocrTextChanged = true;
         }
         else
         {
@@ -40,9 +46,15 @@ internal static class OcrUtils
 
             textHookerTextNode = s_textHookerTextBacklog.AddFirst(text.Trim());
             ocrResult = s_ocrResult;
+            s_textHookerTextChanged = true;
         }
 
         if (textHookerTextNode is null || ocrResult is null)
+        {
+            return;
+        }
+
+        if (!s_ocrTextChanged || !s_textHookerTextChanged)
         {
             return;
         }
@@ -64,8 +76,6 @@ internal static class OcrUtils
             }
         }
 
-        bool foundExactMatch = false;
-        bool replaced = false;
         string textHookerText = "";
         while (textHookerTextNode is not null)
         {
@@ -90,48 +100,82 @@ internal static class OcrUtils
 
                 if (paragraphText == textHookerText)
                 {
-                    foundExactMatch = true;
-                    break;
+                    while (textHookerTextNode.Previous is not null)
+                    {
+                        s_textHookerTextBacklog.Remove(textHookerTextNode.Previous);
+                    }
+
+                    s_textHookerTextChanged = false;
+                    s_ocrTextChanged = false;
+
+                    Console.WriteLine("Same text.");
+                    return;
                 }
 
                 if (TryReplaceOcrTextWithTextHookerText(textHookerText, paragraphText, out string? resultText))
                 {
                     Console.WriteLine("Replaced OCR text with TextHooker text.");
-                    Console.WriteLine($"OCR text:\n{paragraphText}");
-                    Console.WriteLine($"Text hooker text:\n{resultText}\n");
+                    //Console.WriteLine($"OCR text:\n{paragraphText}");
+                    //Console.WriteLine($"Text hooker text:\n{resultText}\n");
 
                     paragraph.Text = resultText;
-                    replaced = true;
+                    RebuildOcrResult(paragraph);
 
                     while (textHookerTextNode.Previous is not null)
                     {
                         s_textHookerTextBacklog.Remove(textHookerTextNode.Previous);
                     }
 
-                    break;
-                }
-            }
+                    s_textHookerTextChanged = false;
+                    s_ocrTextChanged = false;
 
-            if (foundExactMatch || replaced)
-            {
-                break;
+                    return;
+                }
             }
 
             textHookerTextNode = textHookerTextNode.Next;
         }
 
-        if (!replaced && s_textHookerTextBacklog.First is not null)
+        if (s_textHookerTextBacklog.First is not null && !s_mouseWasOverWordBoundingBox)
         {
             Console.WriteLine($"Failed to replace OCR text with TextHooker text.\nCurrent text hooker text:\n{s_textHookerTextBacklog.First.Value}\n");
         }
     }
 
+    private static void RebuildOcrResult(Paragraph paragraph)
+    {
+        int currentIndex = 0;
+
+        string newParagraphText = paragraph.Text;
+        for (int i = 0; i < paragraph.Lines.Length; i++)
+        {
+            Line line = paragraph.Lines[i];
+            int lineStartIndex = currentIndex;
+
+            for (int j = 0; j < line.Words.Length; j++)
+            {
+                Word word = line.Words[j];
+                int wordLength = word.Text.Length;
+
+                word.Text = newParagraphText[currentIndex..(currentIndex + wordLength)];
+                currentIndex += wordLength;
+            }
+
+            line.Text = newParagraphText[lineStartIndex..currentIndex];
+        }
+    }
+
+
     private static OcrResult? GetOcrResult(string text)
     {
         try
         {
-            return text.StartsWith('{')
-                ? JsonSerializer.Deserialize(text, OcrResultJsonContext.Default.OcrResult)
+            OwocrOcrResult? owocrOcrResult = text.StartsWith('{')
+                ? JsonSerializer.Deserialize(text, OcrResultJsonContext.Default.OwocrOcrResult)
+                : null;
+
+            return owocrOcrResult is not null
+                ? MapperUtils.OwocrOcrResultToOcrResult(owocrOcrResult)
                 : null;
         }
         catch (JsonException ex)
@@ -150,7 +194,7 @@ internal static class OcrUtils
             return;
         }
 
-        ImageProperties imageProperties = ocrResult.ImageProperties;
+        Rectangle imageProperties = ocrResult.ImageProperties;
         mousePosition = MagpieUtils.GetMousePosition(mousePosition);
         bool mouseIsNotOverAnyLines = true;
         if (imageProperties.Contains(mousePosition))
@@ -158,7 +202,7 @@ internal static class OcrUtils
             for (int paragraphIndex = 0; paragraphIndex < ocrResult.Paragraphs.Length; paragraphIndex++)
             {
                 Paragraph paragraph = ocrResult.Paragraphs[paragraphIndex];
-                if (!IsMouseOver(mousePosition, imageProperties, paragraph.BoundingBox))
+                if (!paragraph.BoundingBox.IsMouseOver(mousePosition))
                 {
                     continue;
                 }
@@ -167,7 +211,7 @@ internal static class OcrUtils
                 for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
                 {
                     Line line = lines[lineIndex];
-                    if (!IsMouseOver(mousePosition, imageProperties, line.BoundingBox))
+                    if (!line.BoundingBox.IsMouseOver(mousePosition))
                     {
                         continue;
                     }
@@ -177,35 +221,44 @@ internal static class OcrUtils
                     for (int wordIndex = 0; wordIndex < words.Length; wordIndex++)
                     {
                         Word word = words[wordIndex];
-                        if (!IsMouseOver(mousePosition, imageProperties, word.BoundingBox))
+                        if (!word.BoundingBox.IsMouseOver(mousePosition))
                         {
                             continue;
                         }
 
                         string output;
-                        if (ConfigManager.OutputType is OutputPayload.WordInfo or OutputPayload.TextStartingFromPosition)
+                        if (ConfigManager.OutputType is OutputPayload.GraphemeInfo or OutputPayload.TextStartingFromPosition)
                         {
-                            int wordStartIndex = 0;
+                            int charStartIndex = 0;
                             for (int prevLineIndex = 0; prevLineIndex < lineIndex; prevLineIndex++)
                             {
                                 Line prevLine = lines[prevLineIndex];
-                                wordStartIndex += prevLine.Text.Length;
+                                charStartIndex += prevLine.Text.Length;
                             }
 
                             for (int prevWordIndex = 0; prevWordIndex < wordIndex; prevWordIndex++)
                             {
                                 Word prevWord = words[prevWordIndex];
-                                wordStartIndex += prevWord.Text.Length;
+                                charStartIndex += prevWord.Text.Length;
                             }
 
-                            if (ConfigManager.OutputType is OutputPayload.WordInfo)
+                            if (word.Text.Length > 1)
                             {
-                                WordInfo wordInfo = new(wordStartIndex, paragraph.Text, paragraph.WritingDirection is WritingDirection.TOP_TO_BOTTOM);
-                                output = JsonSerializer.Serialize(wordInfo, OcrResultJsonContext.Default.WordInfo);
+                                int graphemeCount = word.Text.GetGraphemeCount();
+                                if (graphemeCount > 1)
+                                {
+                                    charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                }
+                            }
+
+                            if (ConfigManager.OutputType is OutputPayload.GraphemeInfo)
+                            {
+                                GraphemeInfo graphemeInfo = new(charStartIndex, paragraph.Text, paragraph.WritingDirection is WritingDirection.TopToBottomRightToLeft);
+                                output = JsonSerializer.Serialize(graphemeInfo, OcrResultJsonContext.Default.GraphemeInfo);
                             }
                             else // if (ConfigManager.OutputType is OutputType.TextStartingFromPosition)
                             {
-                                output = paragraph.Text[wordStartIndex..];
+                                output = paragraph.Text[charStartIndex..];
                             }
                         }
                         else if (ConfigManager.OutputType is OutputPayload.Paragraph)
@@ -216,9 +269,22 @@ internal static class OcrUtils
                         {
                             output = line.Text;
                         }
-                        else // if (ConfigManager.OutputType is OutputType.Word)
+                        else if (ConfigManager.OutputType is OutputPayload.Word)
                         {
                             output = word.Text;
+                        }
+                        else // if (ConfigManager.OutputType is OutputPayload.Grapheme)
+                        {
+                            output = word.Text;
+                            if (word.Text.Length > 1)
+                            {
+                                int graphemeCount = word.Text.GetGraphemeCount();
+                                if (graphemeCount > 1)
+                                {
+                                    int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                    output = StringInfo.GetNextTextElement(word.Text, graphemeIndex);
+                                }
+                            }
                         }
 
                         if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
@@ -230,16 +296,16 @@ internal static class OcrUtils
                             WinApi.SetClipboardText(output);
                         }
 
-                        s_lastTimeFoundText = true;
+                        s_mouseWasOverWordBoundingBox = true;
                         return;
                     }
                 }
             }
         }
 
-        if (mouseIsNotOverAnyLines && s_lastTimeFoundText)
+        if (mouseIsNotOverAnyLines && s_mouseWasOverWordBoundingBox)
         {
-            s_lastTimeFoundText = false;
+            s_mouseWasOverWordBoundingBox = false;
             if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
             {
                 WebsocketServerUtils.Broadcast("");
@@ -249,30 +315,6 @@ internal static class OcrUtils
                 WinApi.SetClipboardText("");
             }
         }
-    }
-
-    private static bool IsMouseOver(Point mousePosition, ImageProperties imageProperties, BoundingBox boundingBox)
-    {
-        // Convert mouse to image-local coordinates
-        double mouseXImage = mousePosition.X - imageProperties.X;
-        double mouseYImage = mousePosition.Y - imageProperties.Y;
-
-        // Precomputed pixel-space center & half-size
-        float centerX = boundingBox.CenterX * imageProperties.Width;
-        float centerY = boundingBox.CenterY * imageProperties.Height;
-        float halfWidth = boundingBox.Width * imageProperties.Width * 0.5f;
-        float halfHeight = boundingBox.Height * imageProperties.Height * 0.5f;
-
-        // Vector from box center to mouse
-        double dx = mouseXImage - centerX;
-        double dy = mouseYImage - centerY;
-
-        // Rotate point into box local space
-        double localX = (dx * boundingBox.CosInverseRotation) - (dy * boundingBox.SinInverseRotation);
-        double localY = (dx * boundingBox.SinInverseRotation) + (dy * boundingBox.CosInverseRotation);
-
-        // Axis-aligned containment check
-        return Math.Abs(localX) <= halfWidth && Math.Abs(localY) <= halfHeight;
     }
 
     private static bool TryReplaceOcrTextWithTextHookerText(string textFromTextHooker, string textFromOcr, [NotNullWhen(true)] out string? resultText)
@@ -300,12 +342,12 @@ internal static class OcrUtils
         const float similarityThreshold = 0.7f;
         const float hardMismatchPenalty = 1.0f;
         const float softMismatchPenalty = 0.4f;
-        const float spaceMismatchPenalty = 0.3f;
+        // const float spaceMismatchPenalty = 0.3f;
 
         float mismatchPenalty = 0f;
         int ocrRuneCount = 0;
-        StringRuneEnumerator normalizedTextFromTextHookerEnumerator = normalizedTextFromTextHooker.EnumerateRunes();
-        StringRuneEnumerator normalizedTextFromOcrEnumerator = normalizedTextFromOcr.EnumerateRunes();
+        GraphemeEnumerator normalizedTextFromTextHookerEnumerator = normalizedTextFromTextHooker.EnumerateGraphemes();
+        GraphemeEnumerator normalizedTextFromOcrEnumerator = normalizedTextFromOcr.EnumerateGraphemes();
 
         StringBuilder finalText = new(textFromOcr.Length);
 
@@ -325,7 +367,6 @@ internal static class OcrUtils
             }
 
             bool hasOcrRune = normalizedTextFromOcrEnumerator.MoveNext();
-
             if (hasTextHookerRune != hasOcrRune)
             {
                 resultText = null;
@@ -337,64 +378,56 @@ internal static class OcrUtils
                 break;
             }
 
-            Rune textHookerRune = normalizedTextFromTextHookerEnumerator.Current;
-            Rune ocrRune = normalizedTextFromOcrEnumerator.Current;
+            ReadOnlySpan<char> textHookerRune = normalizedTextFromTextHookerEnumerator.Current;
+            ReadOnlySpan<char> ocrRune = normalizedTextFromOcrEnumerator.Current;
             ++ocrRuneCount;
 
-            if (textHookerRune.Value == ocrRune.Value)
+            if (textHookerRune == ocrRune)
             {
                 _ = finalText.Append(textHookerRune);
                 continue;
             }
 
-            if (!textHookerRune.IsBmp || !ocrRune.IsBmp)
+            if (textHookerRune.Length > 1 || ocrRune.Length > 1)
             {
                 _ = finalText.Append(textHookerRune);
                 mismatchPenalty += hardMismatchPenalty;
             }
             else
             {
-                char textHookerChar = (char)textHookerRune.Value;
-                char ocrChar = (char)ocrRune.Value;
+                char textHookerChar = textHookerRune[0];
+                char ocrChar = ocrRune[0];
 
-                if (ocrChar is ' ' or '　' && textHookerChar is not ' ' and not '　')
+                char furtherNormalizedTextHookerChar = textHookerChar;
+                char furtherNormalizedOcrChar = ocrChar;
+                if (JapaneseUtils.NormalizationDict.TryGetValue(textHookerChar, out char mappedChar))
                 {
-                    moveNormalizedTextFromTextHookerEnumerator = false;
-                    _ = finalText.Append(ocrChar);
-                    mismatchPenalty += spaceMismatchPenalty;
+                    furtherNormalizedTextHookerChar = mappedChar;
                 }
-                else
+
+                if (JapaneseUtils.NormalizationDict.TryGetValue(ocrChar, out mappedChar))
                 {
-                    char furtherNormalizedTextHookerChar = textHookerChar;
-                    char furtherNormalizedOcrChar = ocrChar;
-                    if (JapaneseUtils.NormalizationDict.TryGetValue(textHookerChar, out char mappedChar))
+                    furtherNormalizedOcrChar = mappedChar;
+                }
+
+                if (furtherNormalizedTextHookerChar != furtherNormalizedOcrChar)
+                {
+                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(furtherNormalizedTextHookerChar, out mappedChar))
                     {
                         furtherNormalizedTextHookerChar = mappedChar;
                     }
-                    if (JapaneseUtils.NormalizationDict.TryGetValue(ocrChar, out mappedChar))
+
+                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(furtherNormalizedOcrChar, out mappedChar))
                     {
                         furtherNormalizedOcrChar = mappedChar;
                     }
 
-                    if (furtherNormalizedTextHookerChar != furtherNormalizedOcrChar)
-                    {
-                        if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(furtherNormalizedTextHookerChar, out mappedChar))
-                        {
-                            furtherNormalizedTextHookerChar = mappedChar;
-                        }
-
-                        if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(furtherNormalizedOcrChar, out mappedChar))
-                        {
-                            furtherNormalizedOcrChar = mappedChar;
-                        }
-
-                        mismatchPenalty += furtherNormalizedTextHookerChar == furtherNormalizedOcrChar
-                            ? softMismatchPenalty
-                            : hardMismatchPenalty;
-                    }
-
-                    _ = finalText.Append(textHookerChar);
+                    mismatchPenalty += furtherNormalizedTextHookerChar == furtherNormalizedOcrChar
+                        ? softMismatchPenalty
+                        : hardMismatchPenalty;
                 }
+
+                _ = finalText.Append(textHookerChar);
             }
 
             if (1f - (mismatchPenalty / normalizedTextFromTextHookerLength) < similarityThreshold)

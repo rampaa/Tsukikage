@@ -1,8 +1,8 @@
 namespace Tsukikage.Utilities;
 
-public static class PathUtils
+internal static class PathUtils
 {
-    public const string TempFileExtension = ".tmp";
+    private const string TempFileExtension = ".tmp";
 
     public static string GetTempPath(string path)
     {
