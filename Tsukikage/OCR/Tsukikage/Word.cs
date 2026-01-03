@@ -38,7 +38,7 @@ internal sealed record class Word(string Text, in BoundingBox BoundingBox)
             normalizedOffset = (localY + BoundingBox.HalfHeight) * BoundingBox.HeightReciprocal;
         }
 
-        int index = (int)(normalizedOffset * graphemeCount);
+        int index = float.ConvertToIntegerNative<int>(normalizedOffset * graphemeCount);
         return index < 0
             ? 0
             : index >= graphemeCount

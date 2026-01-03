@@ -8,5 +8,4 @@ internal sealed class OwocrParagraph(OwocrBoundingBox boundingBox, OwocrLine[] l
     [JsonPropertyName("bounding_box")] public OwocrBoundingBox BoundingBox { get; } = boundingBox;
     [JsonPropertyName("lines")] public OwocrLine[] Lines { get; } = lines;
     [JsonPropertyName("writing_direction")] public OwocrWritingDirection? WritingDirection { get; } = writingDirection;
-    [JsonIgnore] public string Text { get; } = string.Join("", lines.Select(static line => line.Text));
 }

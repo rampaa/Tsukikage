@@ -33,8 +33,9 @@ internal readonly record struct BoundingBox
         CenterX = imageProperties.X.Value + (boundingBox.CenterX * imageProperties.Width * scaleX);
         CenterY = imageProperties.Y.Value + (boundingBox.CenterY * imageProperties.Height * scaleY);
 
-        CosNegativeRotation = boundingBox.CosNegativeRotation;
-        SinNegativeRotation = boundingBox.SinNegativeRotation;
+        float negativeRotationZ = -boundingBox.RotationZ ?? 0;
+        CosNegativeRotation = MathF.Cos(negativeRotationZ);
+        SinNegativeRotation = MathF.Sin(negativeRotationZ);
 
         WidthReciprocal = 1.0f / imageWidth;
         HeightReciprocal = 1.0f / imageHeight;

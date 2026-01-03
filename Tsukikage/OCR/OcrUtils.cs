@@ -174,9 +174,7 @@ internal static class OcrUtils
                 ? JsonSerializer.Deserialize(text, OcrResultJsonContext.Default.OwocrOcrResult)
                 : null;
 
-            return owocrOcrResult is not null
-                ? MapperUtils.OwocrOcrResultToOcrResult(owocrOcrResult)
-                : null;
+            return owocrOcrResult?.ToOcrResult();
         }
         catch (JsonException ex)
         {
