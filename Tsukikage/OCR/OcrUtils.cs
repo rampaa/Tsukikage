@@ -26,7 +26,7 @@ internal static class OcrUtils
     private const string OwocrWindowClassName = "ClipboardHook";
     private static Process? s_owocrProcess;
 
-    private static int s_ocredWindHandle;
+    private static int s_ocredWindowHandle;
     private static Process? s_ocredProcess;
 
     public static void ProcessWebSocketText(string text, bool isTextFromTextHooker)
@@ -165,7 +165,7 @@ internal static class OcrUtils
     private static void HandleOcredWindowProcessExit()
     {
         s_ocrResult = null;
-        s_ocredWindHandle = 0;
+        s_ocredWindowHandle = 0;
         Process? ocredProcess = s_ocredProcess;
         if (ocredProcess is not null)
         {
@@ -229,15 +229,15 @@ internal static class OcrUtils
                 int ocredWindowHandle = ocrResult.WindowHandle;
                 if (ocredWindowHandle is not 0)
                 {
-                    if (ocredWindowHandle != s_ocredWindHandle)
+                    if (ocredWindowHandle != s_ocredWindowHandle)
                     {
                         if (s_ocredProcess is not null)
                         {
                             HandleOcredWindowProcessExit();
                         }
 
-                        s_ocredWindHandle = ocredWindowHandle;
-                        Process? ocredWindowProcess = WinApi.GetProcessByWindowHandle(s_ocredWindHandle);
+                        s_ocredWindowHandle = ocredWindowHandle;
+                        Process? ocredWindowProcess = WinApi.GetProcessByWindowHandle(s_ocredWindowHandle);
                         s_ocredProcess = ocredWindowProcess;
                         if (ocredWindowProcess is not null)
                         {
@@ -245,7 +245,7 @@ internal static class OcrUtils
                         }
                     }
                 }
-                else if (s_ocredWindHandle is not 0)
+                else if (s_ocredWindowHandle is not 0)
                 {
                     HandleOcredWindowProcessExit();
                 }
