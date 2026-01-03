@@ -23,12 +23,24 @@ internal static class OcrUtils
     private static bool s_textHookerTextChanged; // = false
     private static bool s_ocrTextChanged; // = false
 
+    private const string OwocrWindowClassName = "ClipboardHook";
+    private static Process? s_owocrProcess;
+
     public static void ProcessWebSocketText(string text, bool isTextFromTextHooker)
     {
         OcrResult? ocrResult;
         LinkedListNode<string>? textHookerTextNode;
         if (!isTextFromTextHooker)
         {
+            if (s_owocrProcess is null)
+            {
+                s_owocrProcess = WinApi.GetProcessByWindowClassName(OwocrWindowClassName);
+                if (s_owocrProcess is not null)
+                {
+                    s_owocrProcess.Exited += OwocrProcess_Exited;
+                }
+            }
+
             ocrResult = text.Length is not 0
                 ? GetOcrResult(text)
                 : null;
@@ -139,6 +151,18 @@ internal static class OcrUtils
         if (s_textHookerTextBacklog.First is not null && !s_mouseWasOverWordBoundingBox)
         {
             Console.WriteLine($"Failed to replace OCR text with TextHooker text.\nCurrent text hooker text:\n{s_textHookerTextBacklog.First.Value}\n");
+        }
+    }
+
+    private static void OwocrProcess_Exited(object? sender, EventArgs e)
+    {
+        s_ocrResult = null;
+        Process? owocrProcess = s_owocrProcess;
+        if (owocrProcess is not null)
+        {
+            s_owocrProcess = null;
+            owocrProcess.Exited -= OwocrProcess_Exited;
+            owocrProcess.Dispose();
         }
     }
 

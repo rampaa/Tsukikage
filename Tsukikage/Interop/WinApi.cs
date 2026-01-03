@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Tsukikage.OCR;
 using static Tsukikage.Interop.WinApi.NativeMethods;
@@ -151,6 +152,10 @@ internal static partial class WinApi
         [LibraryImport("user32.dll", EntryPoint = "FindWindowW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial nint FindWindowW(string? lpClassName, string? lpWindowName);
+
+        [LibraryImport("user32.dll", EntryPoint = "GetWindowThreadProcessId", SetLastError = true)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        public static partial uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
 
         [LibraryImport("user32.dll", EntryPoint = "WindowFromPoint", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
@@ -409,7 +414,29 @@ internal static partial class WinApi
         }
     }
 
-    internal static void RunMessageLoop()
+    public static Process? GetProcessByWindowClassName(string windowClassName)
+    {
+        nint windowHandle = FindWindow(windowClassName);
+        if (windowHandle is not 0)
+        {
+            uint threadId = GetWindowThreadProcessId(windowHandle, out uint pid);
+            if (threadId is not 0)
+            {
+                try
+                {
+                    return Process.GetProcessById((int)pid);
+                }
+                catch (ArgumentException)
+                {
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static void RunMessageLoop()
     {
         while (GetMessage(out MSG msg, 0, 0, 0) > 0)
         {
