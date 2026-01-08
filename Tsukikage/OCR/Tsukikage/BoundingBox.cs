@@ -18,20 +18,16 @@ internal readonly record struct BoundingBox
 
     public BoundingBox(OwocrBoundingBox boundingBox, in OwocrImageProperties imageProperties)
     {
-        Debug.Assert(imageProperties.ScaleX is not null && imageProperties.ScaleY is not null);
-        float scaleX = imageProperties.ScaleX.Value;
-        float scaleY = imageProperties.ScaleY.Value;
-
-        float imageWidth = boundingBox.Width * imageProperties.Width * scaleX;
-        float imageHeight = boundingBox.Height * imageProperties.Height * scaleY;
+        float imageWidth = boundingBox.Width * imageProperties.Width;
+        float imageHeight = boundingBox.Height * imageProperties.Height;
         Debug.Assert(imageWidth > 0 && imageHeight > 0);
 
         HalfWidth = imageWidth * 0.5f;
         HalfHeight = imageHeight * 0.5f;
 
         Debug.Assert(imageProperties.X is not null && imageProperties.Y is not null);
-        CenterX = imageProperties.X.Value + (boundingBox.CenterX * imageProperties.Width * scaleX);
-        CenterY = imageProperties.Y.Value + (boundingBox.CenterY * imageProperties.Height * scaleY);
+        CenterX = imageProperties.X.Value + (boundingBox.CenterX * imageProperties.Width);
+        CenterY = imageProperties.Y.Value + (boundingBox.CenterY * imageProperties.Height);
 
         float negativeRotationZ = -boundingBox.RotationZ ?? 0;
         CosNegativeRotation = MathF.Cos(negativeRotationZ);
