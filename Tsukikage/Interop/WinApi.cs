@@ -429,21 +429,21 @@ internal static partial class WinApi
     public static Process? GetProcessByWindowHandle(nint windowHandle)
     {
         uint threadId = GetWindowThreadProcessId(windowHandle, out uint pid);
-        if (threadId is not 0)
+        if (threadId is 0)
         {
-            try
-            {
-                Process process = Process.GetProcessById((int)pid);
-                process.EnableRaisingEvents = true;
-                return process;
-            }
-            catch (ArgumentException)
-            {
-                return null;
-            }
+            return null;
         }
 
-        return null;
+        try
+        {
+            Process process = Process.GetProcessById((int)pid);
+            process.EnableRaisingEvents = true;
+            return process;
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
     }
 
     public static nint GetTopmostWindow()

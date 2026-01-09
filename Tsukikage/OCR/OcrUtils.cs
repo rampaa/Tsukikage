@@ -196,14 +196,12 @@ internal static class OcrUtils
         int currentIndex = 0;
 
         string newParagraphText = paragraph.Text;
-        for (int i = 0; i < paragraph.Lines.Length; i++)
+        foreach (Line line in paragraph.Lines)
         {
-            Line line = paragraph.Lines[i];
             int lineStartIndex = currentIndex;
 
-            for (int j = 0; j < line.Words.Length; j++)
+            foreach (Word word in line.Words)
             {
-                Word word = line.Words[j];
                 int wordLength = word.Text.Length;
 
                 word.Text = newParagraphText[currentIndex..(currentIndex + wordLength)];
@@ -224,31 +222,35 @@ internal static class OcrUtils
                 : null;
 
             OcrResult? ocrResult = owocrOcrResult?.ToOcrResult();
-            if (ocrResult is not null)
+            if (ocrResult is null)
             {
-                int ocredWindowHandle = ocrResult.WindowHandle;
-                if (ocredWindowHandle is not 0)
-                {
-                    if (ocredWindowHandle != s_ocredWindowHandle)
-                    {
-                        if (s_ocredProcess is not null)
-                        {
-                            HandleOcredWindowProcessExit();
-                        }
+                return null;
+            }
 
-                        s_ocredWindowHandle = ocredWindowHandle;
-                        Process? ocredWindowProcess = WinApi.GetProcessByWindowHandle(s_ocredWindowHandle);
-                        s_ocredProcess = ocredWindowProcess;
-                        if (ocredWindowProcess is not null)
-                        {
-                            ocredWindowProcess.Exited += OcredWindowProcess_Exited;
-                        }
-                    }
+            int ocredWindowHandle = ocrResult.WindowHandle;
+            if (ocredWindowHandle is not 0)
+            {
+                if (ocredWindowHandle == s_ocredWindowHandle)
+                {
+                    return ocrResult;
                 }
-                else if (s_ocredWindowHandle is not 0)
+
+                if (s_ocredProcess is not null)
                 {
                     HandleOcredWindowProcessExit();
                 }
+
+                s_ocredWindowHandle = ocredWindowHandle;
+                Process? ocredWindowProcess = WinApi.GetProcessByWindowHandle(s_ocredWindowHandle);
+                s_ocredProcess = ocredWindowProcess;
+                if (ocredWindowProcess is not null)
+                {
+                    ocredWindowProcess.Exited += OcredWindowProcess_Exited;
+                }
+            }
+            else if (s_ocredWindowHandle is not 0)
+            {
+                HandleOcredWindowProcessExit();
             }
 
             return ocrResult;
@@ -287,9 +289,8 @@ internal static class OcrUtils
                 }
             }
 
-            for (int paragraphIndex = 0; paragraphIndex < ocrResult.Paragraphs.Length; paragraphIndex++)
+            foreach (Paragraph paragraph in ocrResult.Paragraphs)
             {
-                Paragraph paragraph = ocrResult.Paragraphs[paragraphIndex];
                 if (!paragraph.BoundingBox.IsMouseOver(mousePosition))
                 {
                     continue;
