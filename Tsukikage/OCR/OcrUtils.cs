@@ -396,7 +396,7 @@ internal static class OcrUtils
                             }
                         }
 
-                        if (s_outputDelayTimer.Interval is 0)
+                        if (ConfigManager.OutputDelayInMilliseconds is 0)
                         {
                             SendOutput(output);
                             s_mouseWasOverWordBoundingBox = true;
