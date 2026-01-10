@@ -64,6 +64,11 @@ internal static class OcrUtils
                 : null;
 
             s_ocrResult = ocrResult;
+            if (ocrResult is null)
+            {
+                s_outputDelayTimer.Enabled = false;
+            }
+
             textHookerTextNode = s_textHookerTextBacklog.First;
             s_ocrTextChanged = true;
         }
