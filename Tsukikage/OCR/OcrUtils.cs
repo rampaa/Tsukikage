@@ -452,14 +452,7 @@ internal static class OcrUtils
     {
         s_mouseWasOverWordBoundingBox = false;
         s_outputDelayTimer.Enabled = false;
-        if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
-        {
-            WebsocketServerUtils.Broadcast("");
-        }
-        else // if (ConfigManager.OutputIpcMethod is OutputIpcMethod.Clipboard)
-        {
-            WinApi.SetClipboardText("");
-        }
+        SendOutput("");
     }
 
     private static bool TryReplaceOcrTextWithTextHookerText(string textFromTextHooker, string textFromOcr, [NotNullWhen(true)] out string? resultText)
