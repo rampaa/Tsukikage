@@ -210,9 +210,9 @@ internal static class ConfigManager
             $"""
             Current configs:
             OCR JSON Input WebSocket Address: {OcrJsonInputWebSocketAddress.OriginalString}
-            Text hooker WebSocket AAddress: {TextHookerWebSocketAddress?.OriginalString ?? "Disabled"}
+            Text hooker WebSocket Address: {TextHookerWebSocketAddress?.OriginalString ?? "Disabled"}
             Output Type: {OutputType}
-            Output delay (in milliseconds): {OutputDelayInMilliseconds}
+            Output Delay: {OutputDelayInMilliseconds} ms
             Output Method: {OutputIpcMethod}
             Output WebSocket Address: {DefaultOutputWebSocketAddress}
             """;
