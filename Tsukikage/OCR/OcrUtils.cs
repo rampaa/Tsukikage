@@ -3,12 +3,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Timers;
 using Tsukikage.Interop;
 using Tsukikage.OCR.OwOCR;
 using Tsukikage.OCR.Tsukikage;
 using Tsukikage.Utilities;
 using Tsukikage.Utilities.Json;
 using Tsukikage.Websocket;
+using Timer = System.Timers.Timer;
 
 namespace Tsukikage.OCR;
 
@@ -23,11 +25,24 @@ internal static class OcrUtils
     private static bool s_textHookerTextChanged; // = false
     private static bool s_ocrTextChanged; // = false
 
+    private static string? s_lastOutputText;
+
     private const string OwocrWindowClassName = "ClipboardHook";
     private static Process? s_owocrProcess;
 
     private static int s_ocredWindowHandle;
     private static Process? s_ocredProcess;
+
+    private static readonly Timer s_outputDelayTimer = new()
+    {
+        AutoReset = false,
+        Enabled = false
+    };
+
+    static OcrUtils()
+    {
+        s_outputDelayTimer.Elapsed += OutputDelayTimer_Elapsed;
+    }
 
     public static void ProcessWebSocketText(string text, bool isTextFromTextHooker)
     {
@@ -376,16 +391,29 @@ internal static class OcrUtils
                             }
                         }
 
-                        if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
+                        if (s_outputDelayTimer.Interval is 0)
                         {
-                            WebsocketServerUtils.Broadcast(output);
+                            SendOutput(output);
+                            s_mouseWasOverWordBoundingBox = true;
                         }
-                        else // if (ConfigManager.OutputIpcMethod is OutputIpcMethod.Clipboard)
+                        else
                         {
-                            WinApi.SetClipboardText(output);
+                            if (s_outputDelayTimer.Enabled)
+                            {
+                                if (s_lastOutputText != output)
+                                {
+                                    s_lastOutputText = output;
+                                    s_outputDelayTimer.Interval = ConfigManager.OutputDelayInMilliseconds;
+                                    s_outputDelayTimer.Enabled = true;
+                                }
+                            }
+                            else
+                            {
+                                s_outputDelayTimer.Interval = ConfigManager.OutputDelayInMilliseconds;
+                                s_outputDelayTimer.Enabled = true;
+                            }
                         }
 
-                        s_mouseWasOverWordBoundingBox = true;
                         return;
                     }
                 }
@@ -398,9 +426,32 @@ internal static class OcrUtils
         }
     }
 
+    private static void SendOutput(string output)
+    {
+        if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
+        {
+            WebsocketServerUtils.Broadcast(output);
+        }
+        else // if (ConfigManager.OutputIpcMethod is OutputIpcMethod.Clipboard)
+        {
+            WinApi.SetClipboardText(output);
+        }
+    }
+
+    private static void OutputDelayTimer_Elapsed(object? sender, ElapsedEventArgs e)
+    {
+        string? output = s_lastOutputText;
+        if (output is not null)
+        {
+            SendOutput(output);
+            s_mouseWasOverWordBoundingBox = true;
+        }
+    }
+
     private static void SendEmptyString()
     {
         s_mouseWasOverWordBoundingBox = false;
+        s_outputDelayTimer.Enabled = false;
         if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
         {
             WebsocketServerUtils.Broadcast("");

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using SharpConfig;
 using Tsukikage.OCR;
 using Tsukikage.Utilities;
@@ -38,6 +39,12 @@ internal static class ConfigManager
         ; Grapheme                 : The grapheme at the current mouse position
         """;
 
+    private const string OutputDelayInMillisecondsComment =
+        """
+        ; Time in milliseconds that the output must remain unchanged before it is sent.
+        ; Default value: 0
+        """;
+
     private const string OutputIpcMethodComment =
         """
         ; Specifies the method used to send output.
@@ -66,6 +73,9 @@ internal static class ConfigManager
         {OutputTypeComment}
         {nameof(OutputType)} = GraphemeInfo
 
+        {OutputDelayInMillisecondsComment}
+        {nameof(OutputDelayInMilliseconds)} = 0
+
         {OutputIpcMethodComment}
         {nameof(OutputIpcMethod)} = WebSocket
 
@@ -81,6 +91,7 @@ internal static class ConfigManager
     public static Uri OcrJsonInputWebSocketAddress { get; private set; } = new(DefaultOcrJsonInputWebSocketAddress, UriKind.Absolute);
     public static Uri? TextHookerWebSocketAddress { get; private set; } // = null;
     public static OutputPayload OutputType { get; private set; } = OutputPayload.GraphemeInfo;
+    public static double OutputDelayInMilliseconds { get; private set; } // = 0;
     public static OutputIpcMethod OutputIpcMethod { get; private set; } = OutputIpcMethod.WebSocket;
     public static Uri OutputWebSocketAddress { get; private set; } = new(DefaultOutputWebSocketAddress, UriKind.Absolute);
 
@@ -102,8 +113,9 @@ internal static class ConfigManager
         TextHookerWebSocketAddress = GetWebSocketConfigValue(nameof(TextHookerWebSocketAddress), TextHookerWebSocketAddress, TextHookerWebSocketAddressComment, inputSection, false);
 
         Section outputSection = config["Output"];
-        OutputType = GetConfigValue(nameof(OutputType), OutputType, OutputTypeComment, outputSection);
-        OutputIpcMethod = GetConfigValue(nameof(OutputIpcMethod), OutputIpcMethod, OutputIpcMethodComment, outputSection);
+        OutputType = GetEnumConfigValue(nameof(OutputType), OutputType, OutputTypeComment, outputSection);
+        OutputDelayInMilliseconds = GetConfigValue(nameof(OutputDelayInMilliseconds), OutputDelayInMilliseconds, OutputDelayInMillisecondsComment, outputSection);
+        OutputIpcMethod = GetEnumConfigValue(nameof(OutputIpcMethod), OutputIpcMethod, OutputIpcMethodComment, outputSection);
         OutputWebSocketAddress = GetWebSocketConfigValue(nameof(OutputWebSocketAddress), OutputWebSocketAddress, OutputWebSocketAddressComment, outputSection);
 
         string tempConfigFilePath = PathUtils.GetTempPath(AppInfo.ConfigFilePath);
@@ -144,7 +156,7 @@ internal static class ConfigManager
         return defaultValue;
     }
 
-    private static T GetConfigValue<T>(string key, T defaultValue, string defaultComment, Section section) where T : struct, Enum
+    private static T GetEnumConfigValue<T>(string key, T defaultValue, string defaultComment, Section section) where T : struct, Enum
     {
         int settingCount = section.SettingCount;
 
@@ -168,6 +180,30 @@ internal static class ConfigManager
         return defaultValue;
     }
 
+    private static T GetConfigValue<T>(string key, T defaultValue, string defaultComment, Section section) where T : struct, IConvertible, IParsable<T>
+    {
+        int settingCount = section.SettingCount;
+
+        Setting setting = section[key];
+        string valueFromConfig = setting.RawValue;
+
+        // If setting count increased that means the key did not exist before
+        if (section.SettingCount > settingCount)
+        {
+            setting.RawValue = defaultValue.ToString();
+            setting.Comment = defaultComment;
+            return defaultValue;
+        }
+
+        if (T.TryParse(valueFromConfig, CultureInfo.InvariantCulture, out T value))
+        {
+            return value;
+        }
+
+        setting.RawValue = defaultValue.ToString();
+        return defaultValue;
+    }
+
     public static string CurrentConfigString()
     {
         return
@@ -176,6 +212,7 @@ internal static class ConfigManager
             OCR JSON Input WebSocket Address: {OcrJsonInputWebSocketAddress.OriginalString}
             Text hooker WebSocket AAddress: {TextHookerWebSocketAddress?.OriginalString ?? "Disabled"}
             Output Type: {OutputType}
+            Output delay (in milliseconds): {OutputDelayInMilliseconds}
             Output Method: {OutputIpcMethod}
             Output WebSocket Address: {DefaultOutputWebSocketAddress}
             """;
