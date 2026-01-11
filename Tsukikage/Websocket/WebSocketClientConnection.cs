@@ -2,12 +2,14 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Net.WebSockets;
 using Tsukikage.OCR;
+using Tsukikage.Utilities;
 
 namespace Tsukikage.Websocket;
 
 internal sealed class WebSocketClientConnection : IDisposable
 {
     private ClientWebSocket? _webSocketClient;
+    private CancellationTokenSource? _webSocketCancellationTokenSource;
     private readonly Uri _webSocketUri;
 
     public WebSocketClientConnection(Uri webSocketUri)
@@ -15,14 +17,35 @@ internal sealed class WebSocketClientConnection : IDisposable
         _webSocketUri = webSocketUri;
     }
 
-    public Task Disconnect()
+    public async Task Disconnect()
     {
-        return _webSocketClient?.State is WebSocketState.Open
-            ? _webSocketClient.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, nameof(WebSocketCloseStatus.NormalClosure), CancellationToken.None)
-            : Task.CompletedTask;
+        if (_webSocketClient?.State is WebSocketState.Open)
+        {
+            await _webSocketClient.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, nameof(WebSocketCloseStatus.NormalClosure), CancellationToken.None).ConfigureAwait(false);
+        }
+
+        if (_webSocketCancellationTokenSource is null)
+        {
+            return;
+        }
+
+        await _webSocketCancellationTokenSource.CancelAsync().ConfigureAwait(false);
+        _webSocketCancellationTokenSource.Dispose();
+        _webSocketClient?.Dispose();
+        _webSocketCancellationTokenSource = null;
+        _webSocketClient = null;
     }
 
-    public Task ListenWebSocket(bool textHookerConnection)
+    public void Connect(bool textHookerConnection)
+    {
+        if (_webSocketCancellationTokenSource is null)
+        {
+            _webSocketCancellationTokenSource = new CancellationTokenSource();
+            ListenWebSocket(textHookerConnection, _webSocketCancellationTokenSource.Token).SafeFireAndForget("Unexpected error while listening the WebSocket");
+        }
+    }
+
+    public Task ListenWebSocket(bool textHookerConnection, CancellationToken cancellationToken)
     {
         return Task.Run(async () =>
         {
@@ -31,7 +54,7 @@ internal sealed class WebSocketClientConnection : IDisposable
                 try
                 {
                     using ClientWebSocket webSocketClient = new();
-                    await webSocketClient.ConnectAsync(_webSocketUri, CancellationToken.None).ConfigureAwait(false);
+                    await webSocketClient.ConnectAsync(_webSocketUri, cancellationToken).ConfigureAwait(false);
                     _webSocketClient = webSocketClient;
 
                     Console.WriteLine($"Connected to {(textHookerConnection ? "Text Hooker" : "OCR Engine")}");
@@ -40,11 +63,21 @@ internal sealed class WebSocketClientConnection : IDisposable
                     try
                     {
                         Memory<byte> buffer = rentedBuffer;
-                        while (webSocketClient.State is WebSocketState.Open)
+                        while (!cancellationToken.IsCancellationRequested && webSocketClient.State is WebSocketState.Open)
                         {
                             try
                             {
-                                ValueWebSocketReceiveResult result = await webSocketClient.ReceiveAsync(buffer, CancellationToken.None).ConfigureAwait(false);
+                                ValueWebSocketReceiveResult result = await webSocketClient.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    if (webSocketClient.State is WebSocketState.Open)
+                                    {
+                                        await webSocketClient.CloseAsync(WebSocketCloseStatus.NormalClosure, nameof(WebSocketCloseStatus.NormalClosure), CancellationToken.None).ConfigureAwait(false);
+                                    }
+
+                                    return;
+                                }
+
                                 if (result.MessageType is WebSocketMessageType.Text)
                                 {
                                     int totalBytesReceived = result.Count;
@@ -90,13 +123,19 @@ internal sealed class WebSocketClientConnection : IDisposable
                     Debug.WriteLine($"Couldn't connect to the WebSocket server, probably because it is not running\n{webSocketException}");
                 }
 
+                catch (OperationCanceledException)
+                {
+                    await Console.Error.WriteLineAsync("WebSocket connection was cancelled.").ConfigureAwait(false);
+                    return;
+                }
+
                 catch (Exception ex)
                 {
                     await Console.Error.WriteLineAsync($"An unexpected error occured while listening the websocket server at {_webSocketUri}\n{ex}").ConfigureAwait(false);
                     return;
                 }
             }
-            while (true);
+            while (!cancellationToken.IsCancellationRequested);
         }, CancellationToken.None);
     }
 

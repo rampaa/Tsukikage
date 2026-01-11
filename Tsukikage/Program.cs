@@ -1,8 +1,9 @@
 using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Text;
 using Tsukikage.Interop;
 using Tsukikage.OCR;
-using Tsukikage.Utilities;
+using Tsukikage.Utilities.Bool;
 using Tsukikage.Websocket;
 
 namespace Tsukikage;
@@ -12,6 +13,7 @@ file static class Program
     private static nint WindowHandle { get; set; }
     private static WebSocketClientConnection? s_webSocketClientConnection;
     private static WebSocketClientConnection? s_textHookerWebSocketConnection;
+    private static readonly AtomicBool s_cleanupStarted = new(false);
 
     public static void Main()
     {
@@ -26,25 +28,27 @@ file static class Program
         ProfileOptimization.SetProfileRoot(AppContext.BaseDirectory);
         ProfileOptimization.StartProfile("Startup.Profile");
 
+        using PosixSignalRegistration termSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGTERM, (_) => HandleAppExit());
+        using PosixSignalRegistration sigHupSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGHUP, (_) => HandleAppExit());
+        Console.CancelKeyPress += Console_CancelKeyPress;
+        AppDomain.CurrentDomain.ProcessExit += Console_AppExit;
+
         WindowHandle = WinApi.CreateHiddenWindow();
         WinApi.RegisterForRawMouseInput(WindowHandle);
         MagpieUtils.RegisterToMagpieScalingChangedMessage(WindowHandle);
         MagpieUtils.Init();
-
         ConfigManager.Load();
+
         Console.WriteLine(ConfigManager.CurrentConfigString());
 
         s_webSocketClientConnection = new WebSocketClientConnection(ConfigManager.OcrJsonInputWebSocketAddress);
-        s_webSocketClientConnection.ListenWebSocket(false).SafeFireAndForget("ListenWebSocket failed unexpectedly for WebSocket");
+        s_webSocketClientConnection.Connect(false);
 
         if (ConfigManager.TextHookerWebSocketAddress is not null)
         {
             s_textHookerWebSocketConnection = new WebSocketClientConnection(ConfigManager.TextHookerWebSocketAddress);
-            s_textHookerWebSocketConnection.ListenWebSocket(true).SafeFireAndForget("ListenWebSocket failed unexpectedly for TextHookerWebSocket");
+            s_textHookerWebSocketConnection.Connect(true);
         }
-
-        Console.CancelKeyPress += Console_CancelKeyPress;
-        AppDomain.CurrentDomain.ProcessExit += Console_CancelKeyPress;
 
         if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
         {
@@ -66,29 +70,40 @@ file static class Program
         Console.Error.WriteLine(args.Exception);
     }
 
-    private static void Console_CancelKeyPress(object? sender, EventArgs e)
-    {
-        Cleanup().Wait();
-        Environment.Exit(0);
-    }
-
     private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
     {
         e.Cancel = true;
-        Cleanup().Wait();
-        Environment.Exit(0);
+        HandleAppExit();
+        WinApi.PostQuitMessage();
+    }
+
+    private static void Console_AppExit(object? sender, EventArgs e)
+    {
+        HandleAppExit();
+    }
+
+    private static void HandleAppExit()
+    {
+        Cleanup().GetAwaiter().GetResult();
     }
 
     private static async Task Cleanup()
     {
+        if (!s_cleanupStarted.TrySetTrue())
+        {
+            return;
+        }
+
         if (s_webSocketClientConnection is not null)
         {
             await s_webSocketClientConnection.Disconnect().ConfigureAwait(false);
+            s_webSocketClientConnection = null;
         }
 
         if (s_textHookerWebSocketConnection is not null)
         {
             await s_textHookerWebSocketConnection.Disconnect().ConfigureAwait(false);
+            s_textHookerWebSocketConnection = null;
         }
     }
 }

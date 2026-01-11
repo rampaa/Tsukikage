@@ -222,6 +222,10 @@ internal static partial class WinApi
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint GetModuleHandle(string? lpModuleName);
 
+        [LibraryImport("user32.dll", EntryPoint = "PostQuitMessage")]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        internal static partial void PostQuitMessage(int nExitCode);
+
         [LibraryImport("user32.dll", EntryPoint = "CallNextHookEx", SetLastError = true)]
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
         internal static partial nint CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
@@ -449,6 +453,11 @@ internal static partial class WinApi
     public static nint GetTopmostWindow()
     {
         return GetForegroundWindow();
+    }
+
+    public static void PostQuitMessage()
+    {
+        NativeMethods.PostQuitMessage(0);
     }
 
     public static void RunMessageLoop()
