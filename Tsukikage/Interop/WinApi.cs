@@ -22,6 +22,7 @@ internal static partial class WinApi
         internal const uint GMEM_MOVEABLE = 0x0002;
         internal const int WM_INPUT = 0x00FF;
         internal const int RIDEV_INPUTSINK = 0x00000100;
+        internal const uint SYNCHRONIZE = 0x00100000;
 
         internal delegate nint LowLevelMouseProc(int nCode, nint wParam, nint lParam);
 
@@ -226,6 +227,10 @@ internal static partial class WinApi
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial void PostQuitMessage(int nExitCode);
 
+        [LibraryImport("kernel32.dll", EntryPoint = "OpenEventW", SetLastError = true)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        public static partial nint OpenEventW(uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, [MarshalAs(UnmanagedType.LPWStr)] string lpName);
+
         [LibraryImport("user32.dll", EntryPoint = "CallNextHookEx", SetLastError = true)]
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
         internal static partial nint CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
@@ -428,6 +433,11 @@ internal static partial class WinApi
         return windowHandle is not 0
             ? GetProcessByWindowHandle(windowHandle)
             : null;
+    }
+
+    public static bool IsOwocrStopped()
+    {
+        return OpenEventW(SYNCHRONIZE, false, OcrUtils.OwocrRunningEventName) is 0;
     }
 
     public static Process? GetProcessByWindowHandle(nint windowHandle)

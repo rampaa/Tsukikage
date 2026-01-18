@@ -27,8 +27,7 @@ internal static class OcrUtils
 
     private static string? s_lastOutputText;
 
-    private const string OwocrWindowClassName = "ClipboardHook";
-    private static Process? s_owocrProcess;
+    public const string OwocrRunningEventName = "owocr_running";
 
     private static int s_ocredWindowHandle;
     private static Process? s_ocredProcess;
@@ -50,15 +49,6 @@ internal static class OcrUtils
         LinkedListNode<string>? textHookerTextNode;
         if (!isTextFromTextHooker)
         {
-            if (s_owocrProcess is null)
-            {
-                s_owocrProcess = WinApi.GetProcessByWindowClassName(OwocrWindowClassName);
-                if (s_owocrProcess is not null)
-                {
-                    s_owocrProcess.Exited += OwocrProcess_Exited;
-                }
-            }
-
             ocrResult = text.Length is not 0
                 ? GetOcrResult(text)
                 : null;
@@ -80,8 +70,15 @@ internal static class OcrUtils
             }
 
             textHookerTextNode = s_textHookerTextBacklog.AddFirst(text.Trim());
-            ocrResult = s_ocrResult;
             s_textHookerTextChanged = true;
+
+            if (s_ocrResult is not null && WinApi.IsOwocrStopped())
+            {
+                HandleOwocrExiting();
+                return;
+            }
+
+            ocrResult = s_ocrResult;
         }
 
         if (textHookerTextNode is null || ocrResult is null)
@@ -197,17 +194,9 @@ internal static class OcrUtils
         SendEmptyString();
     }
 
-    private static void OwocrProcess_Exited(object? sender, EventArgs e)
+    private static void HandleOwocrExiting()
     {
         s_ocrResult = null;
-        Process? owocrProcess = s_owocrProcess;
-        if (owocrProcess is not null)
-        {
-            s_owocrProcess = null;
-            owocrProcess.Exited -= OwocrProcess_Exited;
-            owocrProcess.Dispose();
-        }
-
         SendEmptyString();
     }
 
@@ -285,9 +274,20 @@ internal static class OcrUtils
 
     public static void HandleMouseMove(Point rawMousePosition)
     {
+        if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket && WebsocketServerUtils.Clients.IsEmpty)
+        {
+            return;
+        }
+
         OcrResult? ocrResult = s_ocrResult;
         if (ocrResult is null)
         {
+            return;
+        }
+
+        if (WinApi.IsOwocrStopped())
+        {
+            HandleOwocrExiting();
             return;
         }
 
