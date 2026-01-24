@@ -64,13 +64,25 @@ internal static class OcrUtils
         }
         else
         {
-            if (s_textHookerTextBacklog.Count is 10)
+            string trimmedText = text.Trim();
+            if (trimmedText.Length > 0)
             {
-                s_textHookerTextBacklog.RemoveLast();
-            }
+                string normalizedTextHookerText = trimmedText.IsNormalized(NormalizationForm.FormC)
+                    ? trimmedText
+                    : trimmedText.Normalize(NormalizationForm.FormC);
 
-            textHookerTextNode = s_textHookerTextBacklog.AddFirst(text.Trim());
-            s_textHookerTextChanged = true;
+                if (s_textHookerTextBacklog.Count is 10)
+                {
+                    s_textHookerTextBacklog.RemoveLast();
+                }
+
+                textHookerTextNode = s_textHookerTextBacklog.AddFirst(normalizedTextHookerText);
+                s_textHookerTextChanged = true;
+            }
+            else
+            {
+                textHookerTextNode = null;
+            }
 
             if (s_ocrResult is not null && WinApi.IsOwocrStopped())
             {
@@ -460,9 +472,9 @@ internal static class OcrUtils
         SendOutput("");
     }
 
-    private static bool TryReplaceOcrTextWithTextHookerText(string textFromTextHooker, string textFromOcr, [NotNullWhen(true)] out string? resultText)
+    private static bool TryReplaceOcrTextWithTextHookerText(string normalizedTextHookerText, string textFromOcr, [NotNullWhen(true)] out string? resultText)
     {
-        if (textFromTextHooker.Length is 0 || textFromOcr.Length is 0)
+        if (textFromOcr.Length is 0)
         {
             resultText = null;
             return false;
@@ -478,10 +490,6 @@ internal static class OcrUtils
             return false;
         }
 
-        string normalizedTextFromTextHooker = textFromTextHooker.IsNormalized(NormalizationForm.FormC)
-            ? textFromTextHooker
-            : textFromTextHooker.Normalize(NormalizationForm.FormC);
-
         const float similarityThreshold = 0.7f;
         const float hardMismatchPenalty = 1.0f;
         const float softMismatchPenalty = 0.4f;
@@ -489,13 +497,13 @@ internal static class OcrUtils
 
         float mismatchPenalty = 0f;
         int ocrRuneCount = 0;
-        GraphemeEnumerator normalizedTextFromTextHookerEnumerator = normalizedTextFromTextHooker.EnumerateGraphemes();
+        GraphemeEnumerator normalizedTextFromTextHookerEnumerator = normalizedTextHookerText.EnumerateGraphemes();
         GraphemeEnumerator normalizedTextFromOcrEnumerator = normalizedTextFromOcr.EnumerateGraphemes();
 
         StringBuilder finalText = new(textFromOcr.Length);
 
         bool moveNormalizedTextFromTextHookerEnumerator = true;
-        int normalizedTextFromTextHookerLength = normalizedTextFromTextHooker.Length;
+        int normalizedTextFromTextHookerLength = normalizedTextHookerText.Length;
         while (true)
         {
             bool hasTextHookerRune;
