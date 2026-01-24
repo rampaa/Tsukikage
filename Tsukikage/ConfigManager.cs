@@ -9,8 +9,15 @@ namespace Tsukikage;
 internal static class ConfigManager
 {
     #region IniFile
+    private const string GeneralSection = "General";
     private const string InputSection = "Input";
     private const string OutputSection = "Output";
+
+    private const string AutoUpdateOnStartupComment =
+        """
+        ; Whether the program should automatically check for and apply updates on startup.
+        ; Default value: true
+        """;
 
     private const string OcrJsonInputWebSocketAddressComment =
         """
@@ -62,6 +69,10 @@ internal static class ConfigManager
 
     private const string IniFileContent =
         $"""
+        [{GeneralSection}]
+        {AutoUpdateOnStartupComment}
+        {nameof(AutoUpdateOnStartup)} = true
+
         [{InputSection}]
         {OcrJsonInputWebSocketAddressComment}
         {nameof(OcrJsonInputWebSocketAddress)} = {DefaultOcrJsonInputWebSocketAddress}
@@ -88,6 +99,7 @@ internal static class ConfigManager
     private const string DefaultOcrJsonInputWebSocketAddress = "ws://127.0.0.1:7331";
     private const string DefaultOutputWebSocketAddress = "ws://127.0.0.1:8765";
 
+    public static bool AutoUpdateOnStartup { get; private set; } = true;
     public static Uri OcrJsonInputWebSocketAddress { get; private set; } = new(DefaultOcrJsonInputWebSocketAddress, UriKind.Absolute);
     public static Uri? TextHookerWebSocketAddress { get; private set; } // = null;
     public static OutputPayload OutputType { get; private set; } = OutputPayload.GraphemeInfo;
@@ -108,11 +120,14 @@ internal static class ConfigManager
         Configuration.IgnoreInlineComments = false;
         Configuration config = Configuration.LoadFromFile(AppInfo.ConfigFilePath);
 
-        Section inputSection = config["Input"];
+        Section generalSection = config[GeneralSection];
+        AutoUpdateOnStartup = GetConfigValue(nameof(AutoUpdateOnStartup), AutoUpdateOnStartup, AutoUpdateOnStartupComment, generalSection);
+
+        Section inputSection = config[InputSection];
         OcrJsonInputWebSocketAddress = GetWebSocketConfigValue(nameof(OcrJsonInputWebSocketAddress), OcrJsonInputWebSocketAddress, OcrJsonInputWebSocketAddressComment, inputSection);
         TextHookerWebSocketAddress = GetWebSocketConfigValue(nameof(TextHookerWebSocketAddress), TextHookerWebSocketAddress, TextHookerWebSocketAddressComment, inputSection, false);
 
-        Section outputSection = config["Output"];
+        Section outputSection = config[OutputSection];
         OutputType = GetEnumConfigValue(nameof(OutputType), OutputType, OutputTypeComment, outputSection);
         OutputDelayInMilliseconds = GetConfigValue(nameof(OutputDelayInMilliseconds), OutputDelayInMilliseconds, OutputDelayInMillisecondsComment, outputSection);
         OutputIpcMethod = GetEnumConfigValue(nameof(OutputIpcMethod), OutputIpcMethod, OutputIpcMethodComment, outputSection);
@@ -209,6 +224,7 @@ internal static class ConfigManager
         return
             $"""
             Current configs:
+            Auto update on startup: {AutoUpdateOnStartup}
             OCR JSON Input WebSocket Address: {OcrJsonInputWebSocketAddress.OriginalString}
             Text hooker WebSocket Address: {TextHookerWebSocketAddress?.OriginalString ?? "Disabled"}
             Output Type: {OutputType}

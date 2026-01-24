@@ -2,20 +2,21 @@ using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
 using Tsukikage.Interop;
+using Tsukikage.Network;
 using Tsukikage.OCR;
 using Tsukikage.Utilities.Bool;
 using Tsukikage.Websocket;
 
 namespace Tsukikage;
 
-file static class Program
+public static class Program
 {
     private static nint WindowHandle { get; set; }
     private static WebSocketClientConnection? s_webSocketClientConnection;
     private static WebSocketClientConnection? s_textHookerWebSocketConnection;
     private static readonly AtomicBool s_cleanupStarted = new(false);
 
-    public static void Main()
+    public static async Task Main()
     {
         Console.InputEncoding = Encoding.Unicode;
         Console.OutputEncoding = Encoding.Unicode;
@@ -33,11 +34,16 @@ file static class Program
         Console.CancelKeyPress += Console_CancelKeyPress;
         AppDomain.CurrentDomain.ProcessExit += Console_AppExit;
 
+        ConfigManager.Load();
+        if (ConfigManager.AutoUpdateOnStartup)
+        {
+            await NetworkUtils.CheckAndInstallTsukikageUpdates().ConfigureAwait(false);
+        }
+
         WindowHandle = WinApi.CreateHiddenWindow();
         WinApi.RegisterForRawMouseInput(WindowHandle);
         MagpieUtils.RegisterToMagpieScalingChangedMessage(WindowHandle);
         MagpieUtils.Init();
-        ConfigManager.Load();
 
         Console.WriteLine(ConfigManager.CurrentConfigString());
 
@@ -87,7 +93,7 @@ file static class Program
         Cleanup().GetAwaiter().GetResult();
     }
 
-    private static async Task Cleanup()
+    public static async Task Cleanup()
     {
         if (!s_cleanupStarted.TrySetTrue())
         {
