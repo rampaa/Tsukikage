@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using SharpConfig;
@@ -205,7 +206,9 @@ internal static class ConfigManager
         // If setting count increased that means the key did not exist before
         if (section.SettingCount > settingCount)
         {
-            setting.RawValue = defaultValue.ToString();
+            string? defaultValueStr = defaultValue.ToString();
+            Debug.Assert(defaultValueStr is not null);
+            setting.RawValue = defaultValueStr;
             setting.Comment = defaultComment;
             return defaultValue;
         }
@@ -215,7 +218,9 @@ internal static class ConfigManager
             return value;
         }
 
-        setting.RawValue = defaultValue.ToString();
+        string? defaultValueString = defaultValue.ToString();
+        Debug.Assert(defaultValueString is not null);
+        setting.RawValue = defaultValueString;
         return defaultValue;
     }
 
