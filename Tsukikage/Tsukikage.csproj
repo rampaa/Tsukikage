@@ -2,14 +2,32 @@
 
   <PropertyGroup>
     <Version>1.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <InformationalVersion>$(Version)</InformationalVersion>
+
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <SelfContained>false</SelfContained>
+    <RollForward>LatestMinor</RollForward>
+    <RollForward>LatestMinor</RollForward>
+    <Platforms>AnyCPU;x86;x64;ARM64</Platforms>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Deterministic>true</Deterministic>
+    
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <AssemblyName>Tsukikage</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWin32Manifest>true</NoWin32Manifest>
     <IsAotCompatible>true</IsAotCompatible>
+
+    <Authors>rampaa</Authors>
+    <RepositoryUrl>https://github.com/rampaa/Tsukikage</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
