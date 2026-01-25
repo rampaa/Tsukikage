@@ -37,7 +37,7 @@ jobs:
           release_name="Tsukikage-$tag-${{ matrix.target }}"
           
           # Build everything
-          dotnet publish Tsukikage.Windows/Tsukikage.Windows.csproj --runtime "${{ matrix.target }}" -c Release -o "$release_name"
+          dotnet publish Tsukikage/Tsukikage.csproj --runtime "${{ matrix.target }}" -c Release -o "$release_name"
           
           # Pack files
           7z a -tzip "${release_name}.zip" "./${release_name}/*"
