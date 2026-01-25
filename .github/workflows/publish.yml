@@ -1,0 +1,50 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Release
+    strategy:
+      matrix:
+        kind: ['windowsx64', 'windowsx86', 'windowsarm64']
+        include:
+          - kind: windowsx64
+            os: windows-latest
+            target: win-x64
+          - kind: windowsx86
+            os: windows-latest
+            target: win-x86
+          - kind: windowsarm64
+            os: windows-latest
+            target: win-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.x
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - name: Build
+        shell: bash
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          release_name="Tsukikage-$tag-${{ matrix.target }}"
+          
+          # Build everything
+          dotnet publish Tsukikage.Windows/Tsukikage.Windows.csproj --runtime "${{ matrix.target }}" -c Release -o "$release_name"
+          
+          # Pack files
+          7z a -tzip "${release_name}.zip" "./${release_name}/*"
+          
+          # Delete output directory
+          rm -r "$release_name"
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "Tsukikage*.zip"
