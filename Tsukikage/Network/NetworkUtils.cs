@@ -73,7 +73,7 @@ internal static class NetworkUtils
             }
             else
             {
-                await Console.Error.WriteLineAsync($"Couldn't check for JL updates. GitHub API problem. {gitHubApiResponse.StatusCode} {gitHubApiResponse.ReasonPhrase}").ConfigureAwait(false);
+                await Console.Error.WriteLineAsync($"Couldn't check for Tsukikage updates. GitHub API problem. {gitHubApiResponse.StatusCode} {gitHubApiResponse.ReasonPhrase}").ConfigureAwait(false);
             }
         }
         catch (Exception ex)
