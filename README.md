@@ -5,3 +5,6 @@ Download from the [releases page](https://github.com/rampaa/Tsukikage/releases).
 
 ## System requirements
 * .NET Desktop Runtime 10.0 or later
+
+## License
+Licensed under the GPL-2.0 only
