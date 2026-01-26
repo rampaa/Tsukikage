@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Tsukikage.Interop;
 
 namespace Tsukikage.Network;
 
@@ -106,6 +107,7 @@ internal static class NetworkUtils
             }
 
             await Program.Cleanup().ConfigureAwait(false);
+
             using Process? process = Process.Start(new ProcessStartInfo
             {
                 WorkingDirectory = AppInfo.ApplicationPath,
@@ -113,6 +115,8 @@ internal static class NetworkUtils
                 Arguments = Environment.ProcessId.ToString(CultureInfo.InvariantCulture),
                 UseShellExecute = true
             });
+
+            WinApi.PostQuitMessage();
         }
         else
         {
