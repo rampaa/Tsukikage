@@ -22,7 +22,7 @@ To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWri
    If you itend to use Tsukikage with [JL](https://github.com/rampaa/JL), set this to `websocket`.
 
 3. **`websocket_port`**  
-   Make sure the port number matches the port used in Tsukikage's `OcrJsonInputWebSocketAddress` setting.
+   Make sure the port number matches the port used in Tsukikage's `OcrJsonInputWebSocketAddress` setting.  
    Both use port `7331` by default.
 
 4. **`output_format`**  
@@ -62,7 +62,7 @@ To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWri
 
 ### 2. Install and configure [JL](https://github.com/rampaa/JL)
 
-If you intend to use Tsukikage with JL, you must also install JL:  
+If you intend to use Tsukikage with JL, you must also install JL.  
 
 #### Important JL settings
 JL v4.0.0+ includes predefined `Profile`s. Selecting the `Tsukikage` profile will currently configure the following settings automatically:
@@ -97,7 +97,7 @@ JL v4.0.0+ includes predefined `Profile`s. Selecting the `Tsukikage` profile wil
     Enabled. (Optional)
 
 11. **Don't auto look up the first term on text change if Main Window is not minimized**  
-    Disabled. (Optional)
+    Disabled. (Optional)  
     It is still recommended to minimize JL's main window, as you won't need to interact with it while using Tsukikage.
 
 #### Other JL settings that may be useful
