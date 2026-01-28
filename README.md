@@ -106,8 +106,8 @@ JL v4.0.0+ includes predefined `Profile`s. Selecting the `Tsukikage` profile wil
    This can be enabled if you want to require a key press to avoid accidental lookups of in-game text.
 
 2. **Enable mining mode**  
-   Even though it may not be obvious, you can still use the **Enable mining mode** button.  
-   Alternatively, you can use the `Mining mode` hotkey, or the `Automatically enable mining mode` and `Mining mode activation delay (in milliseconds)` settings.
+   Even though it may not be obvious, you can still use the `"Enable mining mode" button` to enable mining mode.  
+   Alternatively, you can use the `Mining mode` hotkey, or the `Automatically enable mining mode` and `Mining mode activation delay (in milliseconds)` settings to enable mining mode.
 
 3. **Popup settings for vertical text received from Tsukikage**  
    The following settings behave the same as their non-vertical counterparts, but only apply to vertical text received from Tsukikage:
