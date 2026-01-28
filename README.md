@@ -34,7 +34,7 @@ To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWri
    I personally only have `OneOCR` enabled.
 
 6. **`screen_capture_area`**  
-   If you use [Magpie](https://github.com/Blinue/Magpie), select `window`.
+   If you use [Magpie](https://github.com/Blinue/Magpie), select `window`.   
    If you don't use Magpie, Tsukikage should work with all options, but `window` is still **strongly recommended** for efficiency and accuracy reasons.
 
 8. **`screen_capture_delay_seconds`**  
