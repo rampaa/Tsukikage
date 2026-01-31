@@ -10,7 +10,7 @@ Download from the [releases page](https://github.com/rampaa/Tsukikage/releases).
 
 ### 1. Install and configure [OwOCR](https://github.com/AuroraWright/owocr)
 
-To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWright/owocr?tab=readme-ov-file#installation):  
+To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWright/owocr?tab=readme-ov-file#installation).  
 
 #### Important OwOCR settings
 
@@ -19,7 +19,7 @@ To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWri
    Other options *may* work if the image's top-left position is at `x = 0, y = 0`, but using anything other than `screencapture` is **not recommended**.
 
 2. **`write_to`**  
-   If you itend to use Tsukikage with [JL](https://github.com/rampaa/JL), set this to `websocket`.
+   If you intend to use Tsukikage with [JL](https://github.com/rampaa/JL), set this to `websocket`.
 
 3. **`websocket_port`**  
    Make sure the port number matches the port used in Tsukikage's `OcrJsonInputWebSocketAddress` setting.  
