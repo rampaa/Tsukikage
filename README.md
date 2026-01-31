@@ -133,7 +133,7 @@ All Tsukikage settings and their explanations can be found in the [Tsukikage.ini
    Leave this empty or commented out if you cannot hook the source of the OCRed image.
 
 3. **`OutputType`**  
-   If you intend use Tsukikage with JL, set this to either `GraphemeInfo` or `TextStartingFromPosition`.
+   If you intend to use Tsukikage with JL, set this to either `GraphemeInfo` or `TextStartingFromPosition`.
 
    - `GraphemeInfo` is **recommended**, as it provides metadata that allows JL to:
      - Correctly detect text orientation
