@@ -83,9 +83,9 @@ internal static class NetworkUtils
         }
     }
 
-    public static async Task UpdateTsukikage(Uri latestReleaseUrl)
+    private static async Task UpdateTsukikage(Uri latestReleaseUrl)
     {
-        Console.WriteLine($"Updating...");
+        Console.WriteLine("Updating...");
         using HttpResponseMessage downloadResponse = await s_client.GetAsync(latestReleaseUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
         if (downloadResponse.IsSuccessStatusCode)
@@ -102,8 +102,11 @@ internal static class NetworkUtils
             Stream downloadResponseStream = await downloadResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
             await using (downloadResponseStream.ConfigureAwait(false))
             {
-                using ZipArchive archive = new(downloadResponseStream);
-                await archive.ExtractToDirectoryAsync(tmpDirectory).ConfigureAwait(false);
+                ZipArchive archive = new(downloadResponseStream);
+                await using (archive.ConfigureAwait(false))
+                {
+                    await archive.ExtractToDirectoryAsync(tmpDirectory).ConfigureAwait(false);
+                }
             }
 
             await Program.Cleanup().ConfigureAwait(false);

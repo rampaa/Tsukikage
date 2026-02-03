@@ -9,7 +9,7 @@ using Tsukikage.Websocket;
 
 namespace Tsukikage;
 
-public static class Program
+internal static class Program
 {
     private static nint WindowHandle { get; set; }
     private static WebSocketClientConnection? s_webSocketClientConnection;
@@ -29,8 +29,8 @@ public static class Program
         ProfileOptimization.SetProfileRoot(AppContext.BaseDirectory);
         ProfileOptimization.StartProfile("Startup.Profile");
 
-        using PosixSignalRegistration termSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGTERM, (_) => HandleAppExit());
-        using PosixSignalRegistration sigHupSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGHUP, (_) => HandleAppExit());
+        using PosixSignalRegistration termSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGTERM, static _ => HandleAppExit());
+        using PosixSignalRegistration sigHupSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGHUP, static _ => HandleAppExit());
         Console.CancelKeyPress += Console_CancelKeyPress;
         AppDomain.CurrentDomain.ProcessExit += Console_AppExit;
 

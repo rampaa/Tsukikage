@@ -45,7 +45,7 @@ internal sealed class WebSocketClientConnection : IDisposable
         }
     }
 
-    public Task ListenWebSocket(bool textHookerConnection, CancellationToken cancellationToken)
+    private Task ListenWebSocket(bool textHookerConnection, CancellationToken cancellationToken)
     {
         return Task.Run(async () =>
         {
