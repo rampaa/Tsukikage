@@ -16,7 +16,7 @@ namespace Tsukikage.OCR;
 
 internal static class OcrUtils
 {
-    private static OcrResult? s_ocrResult;
+    public static OcrResult? OcrResult { get; set; }
 
     private static readonly LinkedList<string> s_textHookerTextBacklog = [];
 
@@ -26,8 +26,6 @@ internal static class OcrUtils
     private static bool s_ocrTextChanged; // = false
 
     private static string? s_lastOutputText;
-
-    public const string OwocrRunningEventName = "owocr_running";
 
     private static int s_ocredWindowHandle;
     private static Process? s_ocredProcess;
@@ -53,7 +51,7 @@ internal static class OcrUtils
                 ? GetOcrResult(text)
                 : null;
 
-            s_ocrResult = ocrResult;
+            OcrResult = ocrResult;
             if (ocrResult is null)
             {
                 s_outputDelayTimer.Enabled = false;
@@ -84,13 +82,13 @@ internal static class OcrUtils
                 textHookerTextNode = null;
             }
 
-            if (s_ocrResult is not null && WinApi.IsOwocrStopped())
+            if (OcrResult is not null && OwocrUtils.IsOwocrStopped())
             {
-                HandleOwocrExiting();
+                OwocrUtils.HandleOwocrExiting();
                 return;
             }
 
-            ocrResult = s_ocrResult;
+            ocrResult = OcrResult;
         }
 
         if (textHookerTextNode is null || ocrResult is null)
@@ -193,7 +191,7 @@ internal static class OcrUtils
 
     private static void HandleOcredWindowProcessExit()
     {
-        s_ocrResult = null;
+        OcrResult = null;
         s_ocredWindowHandle = 0;
         Process? ocredProcess = s_ocredProcess;
         if (ocredProcess is not null)
@@ -203,12 +201,6 @@ internal static class OcrUtils
             ocredProcess.Dispose();
         }
 
-        SendEmptyString();
-    }
-
-    private static void HandleOwocrExiting()
-    {
-        s_ocrResult = null;
         SendEmptyString();
     }
 
@@ -291,15 +283,15 @@ internal static class OcrUtils
             return;
         }
 
-        OcrResult? ocrResult = s_ocrResult;
+        OcrResult? ocrResult = OcrResult;
         if (ocrResult is null)
         {
             return;
         }
 
-        if (WinApi.IsOwocrStopped())
+        if (OwocrUtils.IsOwocrStopped())
         {
-            HandleOwocrExiting();
+            OwocrUtils.HandleOwocrExiting();
             return;
         }
 
@@ -465,7 +457,7 @@ internal static class OcrUtils
         }
     }
 
-    private static void SendEmptyString()
+    public static void SendEmptyString()
     {
         s_mouseWasOverWordBoundingBox = false;
         s_outputDelayTimer.Enabled = false;

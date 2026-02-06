@@ -15,6 +15,9 @@ internal static partial class WinApi
     internal static partial class NativeMethods
     {
         // ReSharper disable InconsistentNaming
+
+        private const string User32 = "user32.dll";
+        private const string Kernel32 = "kernel32.dll";
         internal const uint WS_POPUP = 0x80000000;
         internal const uint WS_EX_TOOLWINDOW = 0x00000080;
         internal const uint WS_EX_NOACTIVATE = 0x08000000;
@@ -64,8 +67,6 @@ internal static partial class WinApi
             public string lpszClassName;
         }
 
-        // ReSharper restore InconsistentNaming
-
         // ReSharper disable UnusedMember.Global
         internal enum ChangeWindowMessageFilterExAction
         {
@@ -78,30 +79,30 @@ internal static partial class WinApi
         private const string User32 = "user32.dll";
         private const string Kernel32 = "kernel32.dll";
 
-        [LibraryImport(User32, SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "OpenClipboard", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool OpenClipboard(nint hWndNewOwner);
 
-        [LibraryImport(User32, SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "CloseClipboard", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool CloseClipboard();
 
-        [LibraryImport("user32.dll", EntryPoint = "EmptyClipboard", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "EmptyClipboard", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool EmptyClipboard();
 
-        [LibraryImport("user32.dll", EntryPoint = "SetClipboardData", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "SetClipboardData", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint SetClipboardData(uint uFormat, nint hMem);
 
-        [LibraryImport("kernel32.dll", EntryPoint = "GlobalAlloc", SetLastError = true)]
+        [LibraryImport(Kernel32, EntryPoint = "GlobalAlloc", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint GlobalAlloc(uint uFlags, nuint dwBytes);
 
-        [LibraryImport("kernel32.dll", EntryPoint = "GlobalFree", SetLastError = true)]
+        [LibraryImport(Kernel32, EntryPoint = "GlobalFree", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint GlobalFree(nint hMem);
 
@@ -110,128 +111,128 @@ internal static partial class WinApi
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool IsClipboardFormatAvailable(uint format);
 
-        [LibraryImport(User32, SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetClipboardData", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint GetClipboardData(uint uFormat);
 
-        [LibraryImport(Kernel32, SetLastError = true)]
+        [LibraryImport(Kernel32, EntryPoint = "GlobalLock", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint GlobalLock(nint hMem);
 
-        [LibraryImport(Kernel32, SetLastError = true)]
+        [LibraryImport(Kernel32, EntryPoint = "GlobalUnlock", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool GlobalUnlock(nint hMem);
 
-        [LibraryImport("user32.dll", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "RegisterRawInputDevices", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool RegisterRawInputDevices([In] RAWINPUTDEVICE[] pRawInputDevices, int uiNumDevices, int cbSize);
 
-        [LibraryImport("user32.dll", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetRawInputData", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial uint GetRawInputData(nint hRawInput, uint uiCommand, nint pData, ref uint pcbSize, uint cbSizeHeader);
 
-        [LibraryImport("user32.dll", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetCursorPos", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool GetCursorPos(out Point lpPoint);
 
-        [LibraryImport("user32.dll", EntryPoint = "RegisterWindowMessageW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "RegisterWindowMessageW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial int RegisterWindowMessage(string lpString);
 
-        [LibraryImport("user32.dll", EntryPoint = "ChangeWindowMessageFilterEx", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "ChangeWindowMessageFilterEx", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool ChangeWindowMessageFilterEx(nint hWnd, int msg, ChangeWindowMessageFilterExAction action, nint changeInfo);
 
-        [LibraryImport("user32.dll", EntryPoint = "GetPropW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetPropW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial nint GetPropW(nint hWnd, string lpString);
 
-        [LibraryImport("user32.dll", EntryPoint = "FindWindowW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "FindWindowW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial nint FindWindowW(string? lpClassName, string? lpWindowName);
 
-        [LibraryImport("user32.dll", EntryPoint = "GetForegroundWindow")]
+        [LibraryImport(User32, EntryPoint = "GetForegroundWindow")]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial nint GetForegroundWindow();
 
-        [LibraryImport("user32.dll", EntryPoint = "GetWindowThreadProcessId", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetWindowThreadProcessId", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
 
-        [LibraryImport("user32.dll", EntryPoint = "WindowFromPoint", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "WindowFromPoint", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial nint WindowFromPoint(Point point);
 
-        [LibraryImport("user32.dll", EntryPoint = "AddClipboardFormatListener", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "AddClipboardFormatListener", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool AddClipboardFormatListener(nint hwnd);
 
-        [LibraryImport("user32.dll", EntryPoint = "RemoveClipboardFormatListener", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "RemoveClipboardFormatListener", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool RemoveClipboardFormatListener(nint hwnd);
 
-        [LibraryImport("user32.dll", EntryPoint = "GetClipboardSequenceNumber")]
+        [LibraryImport(User32, EntryPoint = "GetClipboardSequenceNumber")]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial ulong GetClipboardSequenceNumber();
 
-        [LibraryImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "SetWindowLongW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         private static partial int SetWindowLong32(nint hWnd, int nIndex, int dwNewLong);
 
-        [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         private static partial nint SetWindowLongPtr64(nint hWnd, int nIndex, nint dwNewLong);
 
-        [LibraryImport("user32.dll", EntryPoint = "SetWindowsHookExW", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "SetWindowsHookExW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, nint hMod, uint dwThreadId);
 
-        [DllImport("user32.dll", EntryPoint = "RegisterClassW", SetLastError = true)]
+        [DllImport(User32, EntryPoint = "RegisterClassW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 #pragma warning disable SYSLIB1054 // Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time
         internal static extern ushort RegisterClass(ref WNDCLASS lpWndClass);
 #pragma warning restore SYSLIB1054 // Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time
 
-        [LibraryImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+        [LibraryImport(User32, EntryPoint = "CreateWindowExW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint CreateWindowEx(uint dwExStyle, string lpClassName, string? lpWindowName, uint dwStyle, int x, int y, int nWidth, int nHeight, nint hWndParent, nint hMenu, nint hInstance, nint lpParam);
 
-        [LibraryImport("user32.dll", EntryPoint = "GetMessageW", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetMessageW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial int GetMessage(out MSG lpMsg, nint hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 
-        [LibraryImport("user32.dll", EntryPoint = "DispatchMessageW")]
+        [LibraryImport(User32, EntryPoint = "DispatchMessageW")]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint DispatchMessage(ref MSG lpMsg);
 
-        [LibraryImport("user32.dll")]
+        [LibraryImport(User32, EntryPoint = "TranslateMessage")]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool TranslateMessage(ref MSG lpMsg);
 
-        [LibraryImport("user32.dll", EntryPoint = "DefWindowProcW")]
+        [LibraryImport(User32, EntryPoint = "DefWindowProcW")]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint DefWindowProc(nint hWnd, uint msg, nint wParam, nint lParam);
 
-        [LibraryImport("kernel32.dll", EntryPoint = "GetModuleHandleW", StringMarshalling = StringMarshalling.Utf16)]
+        [LibraryImport(Kernel32, EntryPoint = "GetModuleHandleW", StringMarshalling = StringMarshalling.Utf16)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint GetModuleHandle(string? lpModuleName);
 
-        [LibraryImport("user32.dll", EntryPoint = "PostQuitMessage")]
+        [LibraryImport(User32, EntryPoint = "PostQuitMessage")]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial void PostQuitMessage(int nExitCode);
 
-        [LibraryImport("kernel32.dll", EntryPoint = "OpenEventW", SetLastError = true)]
+        [LibraryImport(Kernel32, EntryPoint = "OpenEventW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static partial nint OpenEventW(uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, [MarshalAs(UnmanagedType.LPWStr)] string lpName);
 
-        [LibraryImport("user32.dll", EntryPoint = "CallNextHookEx", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "CallNextHookEx", SetLastError = true)]
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
         internal static partial nint CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 #pragma warning restore CA1711 // Identifiers should not have incorrect suffix
@@ -243,11 +244,11 @@ internal static partial class WinApi
                 : SetWindowLong32(hWnd, nIndex, (int)dwNewLong);
         }
 
-        [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetWindowLongW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         private static partial int GetWindowLongPtr32(nint hWnd, int nIndex);
 
-        [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+        [LibraryImport(User32, EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         private static partial nint GetWindowLongPtr64(nint hWnd, int nIndex);
 
@@ -257,6 +258,8 @@ internal static partial class WinApi
                 ? GetWindowLongPtr64(hWnd, nIndex)
                 : GetWindowLongPtr32(hWnd, nIndex);
         }
+
+        // ReSharper restore InconsistentNaming
     }
 #pragma warning restore IDE1006 // Naming rule violation
 
@@ -435,9 +438,9 @@ internal static partial class WinApi
             : null;
     }
 
-    public static bool IsOwocrStopped()
+    public static bool IsEventStopped(string eventName)
     {
-        return OpenEventW(SYNCHRONIZE, false, OcrUtils.OwocrRunningEventName) is 0;
+        return OpenEventW(SYNCHRONIZE, false, eventName) is 0;
     }
 
     public static Process? GetProcessByWindowHandle(nint windowHandle)

@@ -63,9 +63,9 @@ internal static class ConfigManager
         """;
 
     private const string OutputWebSocketAddressComment =
-        """
+        $"""
         ; WebSocket address where output is sent if OutputIpcMethod is WebSocket.
-        ; Default value: ws://127.0.0.1:8765
+        ; Default value: {DefaultOutputWebSocketAddress}
         """;
 
     private const string IniFileContent =
@@ -98,7 +98,7 @@ internal static class ConfigManager
     #endregion
 
     private const string DefaultOcrJsonInputWebSocketAddress = "ws://127.0.0.1:7331";
-    private const string DefaultOutputWebSocketAddress = "ws://127.0.0.1:8765";
+    private const string DefaultOutputWebSocketAddress = "ws://127.0.0.1:8768";
 
     public static bool AutoUpdateOnStartup { get; private set; } = true;
     public static Uri OcrJsonInputWebSocketAddress { get; private set; } = new(DefaultOcrJsonInputWebSocketAddress, UriKind.Absolute);
@@ -235,7 +235,7 @@ internal static class ConfigManager
             Output Type: {OutputType}
             Output Delay: {OutputDelayInMilliseconds} ms
             Output Method: {OutputIpcMethod}
-            Output WebSocket Address: {DefaultOutputWebSocketAddress}
+            Output WebSocket Address: {OutputWebSocketAddress.OriginalString}
             """;
     }
 }

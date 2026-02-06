@@ -1,6 +1,6 @@
 namespace Tsukikage.Utilities.Bool;
 
-public sealed class AtomicBool
+internal sealed class AtomicBool
 {
     private const int False = 0;
     private const int True = 1;

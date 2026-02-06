@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net.Sockets;
 using System.Text;
 using Fleck;
 
@@ -10,12 +11,25 @@ internal static class WebsocketServerUtils
 
     public static readonly ConcurrentDictionary<IWebSocketConnection, byte> Clients = new();
 
-    public static void InitServer(Uri webSocketServerAddress)
+    public static WebSocketServer? Server { get; set; }
+
+    public static async Task<bool> InitServer(Uri webSocketServerAddress)
     {
+        bool isEndpointInUse = await IsEndpointInUse(webSocketServerAddress).ConfigureAwait(false);
+        if (isEndpointInUse)
+        {
+            Console.Error.WriteLine($"WebSocket server couldn't start. The address {webSocketServerAddress.Host}:{webSocketServerAddress.Port} is already in use.");
+            return false;
+        }
+
         FleckLog.Level = LogLevel.Info;
 
-        WebSocketServer server = new(webSocketServerAddress.OriginalString);
-        server.Start(socket =>
+        Server = new(webSocketServerAddress.OriginalString)
+        {
+            RestartAfterListenError = true
+        };
+
+        Server.Start(socket =>
         {
             socket.OnOpen = () =>
             {
@@ -35,6 +49,8 @@ internal static class WebsocketServerUtils
                 Console.Error.WriteLine($"Socket error: {ex.Message}");
             };
         });
+
+        return true;
     }
 
     public static void Broadcast(string message)
@@ -45,6 +61,21 @@ internal static class WebsocketServerUtils
             {
                 _ = socket.Send(message);
             }
+        }
+    }
+
+    private static async Task<bool> IsEndpointInUse(Uri uri)
+    {
+        using TcpClient tcpClient = new();
+
+        try
+        {
+            await tcpClient.ConnectAsync(uri.Host, uri.Port);
+            return true;
+        }
+        catch (SocketException)
+        {
+            return false;
         }
     }
 }

@@ -58,7 +58,11 @@ internal static class Program
 
         if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
         {
-            WebsocketServerUtils.InitServer(ConfigManager.OutputWebSocketAddress);
+            bool webSocketServerStarted = await WebsocketServerUtils.InitServer(ConfigManager.OutputWebSocketAddress).ConfigureAwait(false);
+            if (!webSocketServerStarted)
+            {
+                return;
+            }
         }
 
         WinApi.RunMessageLoop();
@@ -111,5 +115,8 @@ internal static class Program
             await s_textHookerWebSocketConnection.Disconnect().ConfigureAwait(false);
             s_textHookerWebSocketConnection = null;
         }
+
+        WebsocketServerUtils.Server?.Dispose();
+        WebsocketServerUtils.Server = null;
     }
 }
