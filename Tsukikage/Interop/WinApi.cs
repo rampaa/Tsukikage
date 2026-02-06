@@ -76,9 +76,6 @@ internal static partial class WinApi
         }
         // ReSharper restore UnusedMember.Global
 
-        private const string User32 = "user32.dll";
-        private const string Kernel32 = "kernel32.dll";
-
         [LibraryImport(User32, EntryPoint = "OpenClipboard", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [return: MarshalAs(UnmanagedType.Bool)]
