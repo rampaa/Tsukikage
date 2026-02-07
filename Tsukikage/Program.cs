@@ -47,6 +47,20 @@ internal static class Program
 
         Console.WriteLine(ConfigManager.CurrentConfigString());
 
+        if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
+        {
+            bool webSocketServerStarted = await WebsocketServerUtils.InitServer(ConfigManager.OutputWebSocketAddress).ConfigureAwait(false);
+            if (!webSocketServerStarted)
+            {
+                Console.WriteLine("Make sure no other Tsukikage instance is running.");
+                Console.WriteLine("If another application is using this address, close it or change the OutputWebSocketAddress in Tsukikage.ini before restarting Tsukikage.");
+                Console.WriteLine("Press any key to exit...");
+                _ = Console.ReadKey();
+                HandleAppExit();
+                return;
+            }
+        }
+
         s_webSocketClientConnection = new WebSocketClientConnection(ConfigManager.OcrJsonInputWebSocketAddress);
         s_webSocketClientConnection.Connect(false);
 
@@ -54,15 +68,6 @@ internal static class Program
         {
             s_textHookerWebSocketConnection = new WebSocketClientConnection(ConfigManager.TextHookerWebSocketAddress);
             s_textHookerWebSocketConnection.Connect(true);
-        }
-
-        if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
-        {
-            bool webSocketServerStarted = await WebsocketServerUtils.InitServer(ConfigManager.OutputWebSocketAddress).ConfigureAwait(false);
-            if (!webSocketServerStarted)
-            {
-                return;
-            }
         }
 
         WinApi.RunMessageLoop();
