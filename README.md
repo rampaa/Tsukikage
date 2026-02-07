@@ -74,7 +74,7 @@ JL v4.0.0+ includes predefined `Profile`s. Selecting the `Tsukikage` profile wil
    Enabled.
 
 4. **Tsukikage WebSocket server address**  
-   Set to `ws://127.0.0.1:8765`.  
+   Set to `ws://127.0.0.1:8768`.  
    This must match Tsukikage's `OutputWebSocketAddress` setting.  
    If you need to use a different port, make sure to keep both settings in sync.
 
