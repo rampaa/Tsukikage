@@ -114,4 +114,7 @@ internal static class JapaneseUtils
         // ReSharper restore BadExpressionBracesLineBreaks
         #pragma warning restore format
     }.ToFrozenDictionary();
+
+    public static readonly FrozenSet<char> LeftBrackets = ['「', '『', '【', '《', '〔', '（', '［', '〈', '｛', '〝', '︗', '﹁', '﹃', '︵', '﹇', '︷', '︹', '︻', '︽', '︿'];
+    public static readonly FrozenSet<char> RightBrackets = ['」', '』', '】', '》', '〕', '）', '］', '〉', '｝', '〟', '︘', '﹂', '﹄', '︶', '﹈', '︸', '︺', '︼', '︾', '﹀'];
 }

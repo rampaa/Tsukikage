@@ -256,10 +256,7 @@ internal static class OcrUtils
                 s_ocredWindowHandle = ocredWindowHandle;
                 Process? ocredWindowProcess = WinApi.GetProcessByWindowHandle(s_ocredWindowHandle);
                 s_ocredProcess = ocredWindowProcess;
-                if (ocredWindowProcess is not null)
-                {
-                    ocredWindowProcess.Exited += OcredWindowProcess_Exited;
-                }
+                ocredWindowProcess?.Exited += OcredWindowProcess_Exited;
             }
             else if (s_ocredWindowHandle is not 0)
             {
@@ -360,7 +357,7 @@ internal static class OcrUtils
                                 int graphemeCount = word.Text.GetGraphemeCount();
                                 if (graphemeCount > 1)
                                 {
-                                    charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                    charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, word.Text[0], word.Text[^1], paragraph.WritingDirection);
                                 }
                             }
 
@@ -394,7 +391,7 @@ internal static class OcrUtils
                                 int graphemeCount = word.Text.GetGraphemeCount();
                                 if (graphemeCount > 1)
                                 {
-                                    int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                    int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, word.Text[0], word.Text[^1], paragraph.WritingDirection);
                                     output = StringInfo.GetNextTextElement(word.Text, graphemeIndex);
                                 }
                             }
