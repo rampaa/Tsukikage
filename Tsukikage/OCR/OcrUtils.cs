@@ -357,7 +357,7 @@ internal static class OcrUtils
                                 int graphemeCount = word.Text.GetGraphemeCount();
                                 if (graphemeCount > 1)
                                 {
-                                    charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, word.Text[0], word.Text[^1], paragraph.WritingDirection);
+                                    charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
                                 }
                             }
 
@@ -391,7 +391,7 @@ internal static class OcrUtils
                                 int graphemeCount = word.Text.GetGraphemeCount();
                                 if (graphemeCount > 1)
                                 {
-                                    int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, word.Text[0], word.Text[^1], paragraph.WritingDirection);
+                                    int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
                                     output = StringInfo.GetNextTextElement(word.Text, graphemeIndex);
                                 }
                             }

@@ -9,7 +9,7 @@ internal sealed record class Word(string Text, in BoundingBox BoundingBox)
     public BoundingBox BoundingBox { get; } = BoundingBox;
     public string Text { get; set; } = Text;
 
-    public int GetGraphemeIndexFromPosition(Point mousePosition, int graphemeCount, char firstChar, char lastChar, WritingDirection writingDirection)
+    public int GetGraphemeIndexFromPosition(Point mousePosition, int graphemeCount, WritingDirection writingDirection)
     {
         float offsetFromCenterX = mousePosition.X - BoundingBox.CenterX;
         float offsetFromCenterY = mousePosition.Y - BoundingBox.CenterY;
@@ -35,8 +35,8 @@ internal sealed record class Word(string Text, in BoundingBox BoundingBox)
         }
 
         float cell = 1f / graphemeCount;
-        float leading = JapaneseUtils.LeftBrackets.Contains(firstChar) ? 0.5f : 0f;
-        float trailing = JapaneseUtils.RightBrackets.Contains(lastChar) ? 0.5f : 0f;
+        float leading = JapaneseUtils.LeftBrackets.Contains(Text[0]) ? 0.5f : 0f;
+        float trailing = JapaneseUtils.RightBrackets.Contains(Text[^1]) ? 0.5f : 0f;
         normalizedOffset = (normalizedOffset + (cell * leading)) / (1f + (cell * (leading + trailing)));
 
         int index = float.ConvertToIntegerNative<int>(normalizedOffset * graphemeCount);
