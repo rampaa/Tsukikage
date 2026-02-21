@@ -52,12 +52,43 @@ internal static class MapperUtils
     private static Line ToLine(this OwocrLine owocrLine, in OwocrImageProperties imageProperties)
     {
         StringBuilder lineStringBuilder = new();
+        StringBuilder? wordStringBuilder = null;
 
         Word[] words = new Word[owocrLine.Words.Length];
         for (int i = 0; i < words.Length; i++)
         {
             OwocrWord owocrWord = owocrLine.Words[i];
-            words[i] = new Word(owocrWord.Text, new BoundingBox(owocrWord.BoundingBox, imageProperties));
+
+            Grapheme[]? graphemes = null;
+            if (owocrWord.Symbols?.Length > 0)
+            {
+                if (wordStringBuilder is null)
+                {
+                    wordStringBuilder = new StringBuilder(owocrWord.Symbols.Length);
+                }
+                else
+                {
+                    _ = wordStringBuilder.Clear();
+                    _ = wordStringBuilder.EnsureCapacity(owocrWord.Symbols.Length);
+                }
+
+                graphemes = new Grapheme[owocrWord.Symbols.Length];
+                for (int j = 0; j < graphemes.Length; j++)
+                {
+                    OwocrSymbol owocrSymbol = owocrWord.Symbols[j];
+                    graphemes[j] = new Grapheme(owocrSymbol.Text, new BoundingBox(owocrSymbol.BoundingBox, imageProperties));
+
+                    _ = wordStringBuilder.Append(owocrSymbol.Text);
+                    if (owocrSymbol.Separator is not null)
+                    {
+                        _ = wordStringBuilder.Append(owocrSymbol.Separator);
+                    }
+                }
+
+                owocrWord.Text = wordStringBuilder.ToString();
+            }
+
+            words[i] = new Word(owocrWord.Text, new BoundingBox(owocrWord.BoundingBox, imageProperties), graphemes);
 
             _ = lineStringBuilder.Append(owocrWord.Text);
             if (owocrWord.Separator is not null)

@@ -354,10 +354,25 @@ internal static class OcrUtils
 
                             if (word.Text.Length > 1)
                             {
-                                int graphemeCount = word.Text.GetGraphemeCount();
-                                if (graphemeCount > 1)
+                                if (word.Graphemes is not null)
                                 {
-                                    charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                    for (int graphemeIndex = 0; graphemeIndex < word.Graphemes.Length; graphemeIndex++)
+                                    {
+                                        Grapheme grapheme = word.Graphemes[graphemeIndex];
+                                        if (grapheme.BoundingBox.IsMouseOver(mousePosition))
+                                        {
+                                            charStartIndex += graphemeIndex;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    int graphemeCount = word.Text.GetGraphemeCount();
+                                    if (graphemeCount > 1)
+                                    {
+                                        charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                    }
                                 }
                             }
 
@@ -388,11 +403,25 @@ internal static class OcrUtils
                             output = word.Text;
                             if (word.Text.Length > 1)
                             {
-                                int graphemeCount = word.Text.GetGraphemeCount();
-                                if (graphemeCount > 1)
+                                if (word.Graphemes is not null)
                                 {
-                                    int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
-                                    output = StringInfo.GetNextTextElement(word.Text, graphemeIndex);
+                                    foreach (Grapheme grapheme in word.Graphemes)
+                                    {
+                                        if (grapheme.BoundingBox.IsMouseOver(mousePosition))
+                                        {
+                                            output = grapheme.Text;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    int graphemeCount = word.Text.GetGraphemeCount();
+                                    if (graphemeCount > 1)
+                                    {
+                                        int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                        output = StringInfo.GetNextTextElement(word.Text, graphemeIndex);
+                                    }
                                 }
                             }
                         }
