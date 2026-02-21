@@ -8,7 +8,7 @@ internal sealed record class Word(string Text, in BoundingBox BoundingBox, Graph
 {
     public BoundingBox BoundingBox { get; } = BoundingBox;
     public string Text { get; set; } = Text;
-    public Grapheme[]? Graphemes { get; set; } = Graphemes;
+    public Grapheme[]? Graphemes { get; } = Graphemes;
 
     public int GetGraphemeIndexFromPosition(Point mousePosition, int graphemeCount, WritingDirection writingDirection)
     {

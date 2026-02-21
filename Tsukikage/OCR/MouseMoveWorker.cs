@@ -32,6 +32,7 @@ internal static class MouseMoveWorker
         }
     }
 
+    // ReSharper disable once FunctionNeverReturns
     private static void Worker()
     {
         while (true)

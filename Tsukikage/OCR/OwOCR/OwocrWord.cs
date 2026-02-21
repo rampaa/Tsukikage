@@ -7,9 +7,6 @@ internal sealed record class OwocrWord(string Text, OwocrBoundingBox BoundingBox
 {
     [JsonPropertyName("bounding_box")] public OwocrBoundingBox BoundingBox { get; } = BoundingBox;
     [JsonPropertyName("text")] public string Text { get; set; } = Text;
-
-    // ReSharper disable once MemberCanBePrivate.Global
     [JsonPropertyName("separator")] public string? Separator { get; } = Separator;
-
     [JsonPropertyName("symbols")] public OwocrSymbol[]? Symbols { get; } = Symbols;
 }
