@@ -31,16 +31,17 @@ To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWri
 5. **`engines`**  
    Only enable OCR engine(s) you actually use.  
    This greatly affects OwOCR's startup time.  
-   I personally only have `OneOCR` enabled.
+   I personally only have `Chrome Screen AI` and `OneOCR` enabled.
 
 6. **`screen_capture_area`**  
-   If you use [Magpie](https://github.com/Blinue/Magpie), select `window`.   
+   If you use [Magpie](https://github.com/Blinue/Magpie), select `window`. Don't forget to enter the window name of the window.  
    If you don't use Magpie, Tsukikage should work with all options, but `window` is still **strongly recommended** for efficiency and accuracy reasons.
 
 8. **`screen_capture_delay_seconds`**  
    If OwOCR's CPU usage is too high, try increasing this value.  
    A higher value reduces CPU usage but increases the delay before Tsukikage receives updated text, which hurts interactivity.
 
+   - For `Chrome Screen AI` setting it to 0 works well for me, but YMMV.
    - For `OneOCR`, a value between `1.5` and `3` seconds works well for me, but YMMV.
    - If you need a very large value to keep CPU usage reasonable, consider disabling automatic capture by setting this to `-1` and instead using the `screen_capture_combo` hotkey to trigger OCR manually.
 
