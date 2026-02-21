@@ -354,6 +354,7 @@ internal static class OcrUtils
 
                             if (word.Text.Length > 1)
                             {
+                                bool graphemeFound = false;
                                 if (word.Graphemes is not null)
                                 {
                                     for (int graphemeIndex = 0; graphemeIndex < word.Graphemes.Length; graphemeIndex++)
@@ -362,11 +363,13 @@ internal static class OcrUtils
                                         if (grapheme.BoundingBox.IsMouseOver(mousePosition))
                                         {
                                             charStartIndex += graphemeIndex;
+                                            graphemeFound = true;
                                             break;
                                         }
                                     }
                                 }
-                                else
+
+                                if (!graphemeFound)
                                 {
                                     int graphemeCount = word.Text.GetGraphemeCount();
                                     if (graphemeCount > 1)
@@ -401,6 +404,8 @@ internal static class OcrUtils
                         else // if (ConfigManager.OutputType is OutputPayload.Grapheme)
                         {
                             output = word.Text;
+
+                            bool graphemeFound = false;
                             if (word.Text.Length > 1)
                             {
                                 if (word.Graphemes is not null)
@@ -410,11 +415,13 @@ internal static class OcrUtils
                                         if (grapheme.BoundingBox.IsMouseOver(mousePosition))
                                         {
                                             output = grapheme.Text;
+                                            graphemeFound = true;
                                             break;
                                         }
                                     }
                                 }
-                                else
+
+                                if (!graphemeFound)
                                 {
                                     int graphemeCount = word.Text.GetGraphemeCount();
                                     if (graphemeCount > 1)
