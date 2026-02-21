@@ -405,9 +405,9 @@ internal static class OcrUtils
                         {
                             output = word.Text;
 
-                            bool graphemeFound = false;
                             if (word.Text.Length > 1)
                             {
+                                bool graphemeFound = false;
                                 if (word.Graphemes is not null)
                                 {
                                     foreach (Grapheme grapheme in word.Graphemes)
