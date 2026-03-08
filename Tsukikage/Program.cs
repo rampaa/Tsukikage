@@ -35,31 +35,26 @@ internal static class Program
         AppDomain.CurrentDomain.ProcessExit += Console_AppExit;
 
         ConfigManager.Load();
-        if (ConfigManager.AutoUpdateOnStartup)
-        {
-            await NetworkUtils.CheckAndInstallTsukikageUpdates().ConfigureAwait(false);
-        }
-
-        WindowHandle = WinApi.CreateHiddenWindow();
-        WinApi.RegisterForRawMouseInput(WindowHandle);
-        MagpieUtils.RegisterToMagpieScalingChangedMessage(WindowHandle);
-        MagpieUtils.Init();
-
-        Console.WriteLine(ConfigManager.CurrentConfigString());
-
         if (ConfigManager.OutputIpcMethod is OutputIpcMethod.WebSocket)
         {
             bool webSocketServerStarted = await WebsocketServerUtils.InitServer(ConfigManager.OutputWebSocketAddress).ConfigureAwait(false);
             if (!webSocketServerStarted)
             {
                 Console.WriteLine("Make sure no other Tsukikage instance is running.");
-                Console.WriteLine("If another application is using this address, close it or change the OutputWebSocketAddress in Tsukikage.ini before restarting Tsukikage.");
+                Console.WriteLine($"If another application is using {ConfigManager.OutputWebSocketAddress.OriginalString}, close it or change the {nameof(ConfigManager.OutputWebSocketAddress)} in Tsukikage.ini before restarting Tsukikage.");
                 Console.WriteLine("Press any key to exit...");
                 _ = Console.ReadKey();
                 HandleAppExit();
                 return;
             }
         }
+
+        if (ConfigManager.AutoUpdateOnStartup)
+        {
+            await NetworkUtils.CheckAndInstallTsukikageUpdates().ConfigureAwait(false);
+        }
+
+        Console.WriteLine(ConfigManager.CurrentConfigString());
 
         s_webSocketClientConnection = new WebSocketClientConnection(ConfigManager.OcrJsonInputWebSocketAddress);
         s_webSocketClientConnection.Connect(false);
@@ -69,6 +64,11 @@ internal static class Program
             s_textHookerWebSocketConnection = new WebSocketClientConnection(ConfigManager.TextHookerWebSocketAddress);
             s_textHookerWebSocketConnection.Connect(true);
         }
+
+        WindowHandle = WinApi.CreateHiddenWindow();
+        WinApi.RegisterForRawMouseInput(WindowHandle);
+        MagpieUtils.RegisterToMagpieScalingChangedMessage(WindowHandle);
+        MagpieUtils.Init();
 
         WinApi.RunMessageLoop();
     }
