@@ -33,10 +33,10 @@ internal static class MapperUtils
         for (int i = 0; i < lines.Length; i++)
         {
             OwocrLine owocrLine = owocrParagraph.Lines[i];
-            lines[i] = owocrLine.ToLine(imageProperties);
+            lines[i] = owocrLine.ToLine(imageProperties, owocrParagraph.WritingDirection);
         }
 
-        return new Paragraph(new BoundingBox(owocrParagraph.BoundingBox, imageProperties), lines, owocrParagraph.WritingDirection.ToWritingDirection());
+        return new Paragraph(new BoundingBox(owocrParagraph.BoundingBox, imageProperties), lines);
     }
 
     private static WritingDirection ToWritingDirection(this OwocrWritingDirection? owocrWritingDirection)
@@ -49,7 +49,7 @@ internal static class MapperUtils
         };
     }
 
-    private static Line ToLine(this OwocrLine owocrLine, in OwocrImageProperties imageProperties)
+    private static Line ToLine(this OwocrLine owocrLine, in OwocrImageProperties imageProperties, OwocrWritingDirection? paragraphWritingDirection)
     {
         StringBuilder lineStringBuilder = new();
         StringBuilder? wordStringBuilder = null;
@@ -97,6 +97,6 @@ internal static class MapperUtils
             }
         }
 
-        return new Line(new BoundingBox(owocrLine.BoundingBox, imageProperties), words, lineStringBuilder.ToString());
+        return new Line(new BoundingBox(owocrLine.BoundingBox, imageProperties), words, lineStringBuilder.ToString(), (owocrLine.WritingDirection ?? paragraphWritingDirection).ToWritingDirection());
     }
 }

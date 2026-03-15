@@ -374,14 +374,14 @@ internal static class OcrUtils
                                     int graphemeCount = word.Text.GetGraphemeCount();
                                     if (graphemeCount > 1)
                                     {
-                                        charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                        charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, line.WritingDirection);
                                     }
                                 }
                             }
 
                             if (ConfigManager.OutputType is OutputPayload.GraphemeInfo)
                             {
-                                GraphemeInfo graphemeInfo = new(charStartIndex, paragraph.Text, paragraph.WritingDirection is WritingDirection.TopToBottomRightToLeft);
+                                GraphemeInfo graphemeInfo = new(charStartIndex, paragraph.Text, line.WritingDirection is WritingDirection.TopToBottomRightToLeft);
                                 output = JsonSerializer.Serialize(graphemeInfo, OcrResultJsonContext.Default.GraphemeInfo);
                             }
                             else // if (ConfigManager.OutputType is OutputType.TextStartingFromPosition)
@@ -426,7 +426,7 @@ internal static class OcrUtils
                                     int graphemeCount = word.Text.GetGraphemeCount();
                                     if (graphemeCount > 1)
                                     {
-                                        int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, paragraph.WritingDirection);
+                                        int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, line.WritingDirection);
                                         output = StringInfo.GetNextTextElement(word.Text, graphemeIndex);
                                     }
                                 }
