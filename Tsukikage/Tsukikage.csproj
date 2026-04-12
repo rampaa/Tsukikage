@@ -32,7 +32,7 @@
 
   <ItemGroup>
     <PackageReference Include="Fleck" Version="1.2.0" />
-    <PackageReference Include="sharpconfig" Version="4.0.0" />
+    <PackageReference Include="sharpconfig" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -10,15 +10,15 @@
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[10.0.3, )",
-        "resolved": "10.0.3",
-        "contentHash": "0B6nZyCHWXnvmlB559oduOspVdNOnpNXPjhpWVMovLPAsDVG7A4jJR9rzECf67JUzxP8/ee/wA8clwIzJcWNFA=="
+        "requested": "[10.0.5, )",
+        "resolved": "10.0.5",
+        "contentHash": "A+5ZuQ0f449tM+MQrhf6R9ZX7lYpjk/ODEwLYKrnF6111rtARx8fVsm4YznUnQiKnnXfaXNBqgxmil6RW3L3SA=="
       },
       "SharpConfig": {
         "type": "Direct",
-        "requested": "[4.0.0, )",
-        "resolved": "4.0.0",
-        "contentHash": "UbH+xH+MplNT27ik84Kp22g7BgYlMJ1DfQrxFMM/3UeqE4nhcsPKZygDdQCrvIprROR4hVmVQyMuuaC7HIz96A=="
+        "requested": "[4.1.0, )",
+        "resolved": "4.1.0",
+        "contentHash": "UB/YeadHBGIIo0UvQ+vNxqdWD7VclFqYtDaaLnWw0SUQluYEeXsYEbpYU9+5xm427ovMLiIsRaXOkW9x09uoZw=="
       }
     }
   }
