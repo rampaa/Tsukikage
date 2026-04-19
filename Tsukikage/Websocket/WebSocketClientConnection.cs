@@ -143,5 +143,8 @@ internal sealed class WebSocketClientConnection : IDisposable
     {
         _webSocketClient?.Dispose();
         _webSocketClient = null;
+
+        _webSocketCancellationTokenSource?.Dispose();
+        _webSocketCancellationTokenSource = null;
     }
 }

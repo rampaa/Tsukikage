@@ -18,7 +18,7 @@ internal static class WebsocketServerUtils
         bool isEndpointInUse = await IsEndpointInUse(webSocketServerAddress).ConfigureAwait(false);
         if (isEndpointInUse)
         {
-            Console.Error.WriteLine($"WebSocket server couldn't start. The address {webSocketServerAddress.Host}:{webSocketServerAddress.Port} is already in use.");
+            await Console.Error.WriteLineAsync($"WebSocket server couldn't start. The address {webSocketServerAddress.Host}:{webSocketServerAddress.Port} is already in use.").ConfigureAwait(false);
             return false;
         }
 
@@ -70,7 +70,7 @@ internal static class WebsocketServerUtils
 
         try
         {
-            await tcpClient.ConnectAsync(uri.Host, uri.Port);
+            await tcpClient.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
             return true;
         }
         catch (SocketException)

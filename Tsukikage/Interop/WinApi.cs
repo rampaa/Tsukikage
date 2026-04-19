@@ -33,16 +33,37 @@ internal static partial class WinApi
         internal delegate nint WndProc(nint hWnd, uint msg, nint wParam, nint lParam);
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct RAWINPUTDEVICE
+        internal struct RAWINPUTDEVICE : IEquatable<RAWINPUTDEVICE>
         {
             public ushort usUsagePage;
             public ushort usUsage;
             public int dwFlags;
             public nint hwndTarget;
+
+            public bool Equals(RAWINPUTDEVICE other)
+            {
+                return usUsagePage == other.usUsagePage
+                    && usUsage == other.usUsage
+                    && dwFlags == other.dwFlags
+                    && hwndTarget == other.hwndTarget;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is RAWINPUTDEVICE other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(usUsagePage, usUsage, dwFlags, hwndTarget);
+            }
+
+            public static bool operator ==(RAWINPUTDEVICE left, RAWINPUTDEVICE right) => left.Equals(right);
+            public static bool operator !=(RAWINPUTDEVICE left, RAWINPUTDEVICE right) => !left.Equals(right);
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct MSG
+        internal struct MSG : IEquatable<MSG>
         {
             public nint hwnd;
             public uint message;
@@ -50,10 +71,33 @@ internal static partial class WinApi
             public nint lParam;
             public uint time;
             public Point pt;
+
+            public bool Equals(MSG other)
+            {
+                return hwnd == other.hwnd
+                    && message == other.message
+                    && wParam == other.wParam
+                    && lParam == other.lParam
+                    && time == other.time
+                    && pt == other.pt;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is MSG other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(hwnd, message, wParam, lParam, time, pt);
+            }
+
+            public static bool operator ==(MSG left, MSG right) => left.Equals(right);
+            public static bool operator !=(MSG left, MSG right) => !left.Equals(right);
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        internal struct WNDCLASS
+        internal struct WNDCLASS : IEquatable<WNDCLASS>
         {
             public uint style;
             public nint lpfnWndProc;
@@ -65,6 +109,33 @@ internal static partial class WinApi
             public nint hbrBackground;
             public string? lpszMenuName;
             public string lpszClassName;
+
+            public bool Equals(WNDCLASS other)
+            {
+                return style == other.style
+                    && lpfnWndProc == other.lpfnWndProc
+                    && cbClsExtra == other.cbClsExtra
+                    && cbWndExtra == other.cbWndExtra
+                    && hInstance == other.hInstance
+                    && hIcon == other.hIcon
+                    && hCursor == other.hCursor
+                    && hbrBackground == other.hbrBackground
+                    && lpszMenuName == other.lpszMenuName
+                    && lpszClassName == other.lpszClassName;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is WNDCLASS other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(style, lpfnWndProc, cbClsExtra, cbWndExtra, hInstance, hIcon, HashCode.Combine(hCursor, hbrBackground, lpszMenuName?.GetHashCode(StringComparison.Ordinal), lpszClassName.GetHashCode(StringComparison.Ordinal)));
+            }
+
+            public static bool operator ==(WNDCLASS left, WNDCLASS right) => left.Equals(right);
+            public static bool operator !=(WNDCLASS left, WNDCLASS right) => !left.Equals(right);
         }
 
         // ReSharper disable UnusedMember.Global
@@ -230,6 +301,7 @@ internal static partial class WinApi
         public static partial nint OpenEventW(uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, [MarshalAs(UnmanagedType.LPWStr)] string lpName);
 
         [LibraryImport(User32, EntryPoint = "CallNextHookEx", SetLastError = true)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
         internal static partial nint CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 #pragma warning restore CA1711 // Identifiers should not have incorrect suffix

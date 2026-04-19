@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Version>1.2.0</Version>
@@ -17,6 +17,7 @@
     
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <AnalysisLevel>10-all</AnalysisLevel>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <AssemblyName>Tsukikage</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>

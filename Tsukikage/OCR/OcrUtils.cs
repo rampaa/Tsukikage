@@ -48,7 +48,7 @@ internal static class OcrUtils
         if (!isTextFromTextHooker)
         {
             ocrResult = text.Length is not 0
-                ? GetOcrResult(text)
+                ? GetOcrResultFromJson(text)
                 : null;
 
             OcrResult = ocrResult;
@@ -226,7 +226,7 @@ internal static class OcrUtils
     }
 
 
-    private static OcrResult? GetOcrResult(string text)
+    private static OcrResult? GetOcrResultFromJson(string text)
     {
         try
         {
