@@ -40,7 +40,7 @@ internal static partial class WinApi
             public int dwFlags;
             public nint hwndTarget;
 
-            public bool Equals(RAWINPUTDEVICE other)
+            public readonly bool Equals(RAWINPUTDEVICE other)
             {
                 return usUsagePage == other.usUsagePage
                     && usUsage == other.usUsage
@@ -48,12 +48,12 @@ internal static partial class WinApi
                     && hwndTarget == other.hwndTarget;
             }
 
-            public override bool Equals(object? obj)
+            public override readonly bool Equals(object? obj)
             {
                 return obj is RAWINPUTDEVICE other && Equals(other);
             }
 
-            public override int GetHashCode()
+            public override readonly int GetHashCode()
             {
                 return HashCode.Combine(usUsagePage, usUsage, dwFlags, hwndTarget);
             }
@@ -72,7 +72,7 @@ internal static partial class WinApi
             public uint time;
             public Point pt;
 
-            public bool Equals(MSG other)
+            public readonly bool Equals(MSG other)
             {
                 return hwnd == other.hwnd
                     && message == other.message
@@ -82,12 +82,12 @@ internal static partial class WinApi
                     && pt == other.pt;
             }
 
-            public override bool Equals(object? obj)
+            public override readonly bool Equals(object? obj)
             {
                 return obj is MSG other && Equals(other);
             }
 
-            public override int GetHashCode()
+            public override readonly int GetHashCode()
             {
                 return HashCode.Combine(hwnd, message, wParam, lParam, time, pt);
             }
@@ -110,7 +110,7 @@ internal static partial class WinApi
             public string? lpszMenuName;
             public string lpszClassName;
 
-            public bool Equals(WNDCLASS other)
+            public readonly bool Equals(WNDCLASS other)
             {
                 return style == other.style
                     && lpfnWndProc == other.lpfnWndProc
@@ -124,12 +124,12 @@ internal static partial class WinApi
                     && lpszClassName == other.lpszClassName;
             }
 
-            public override bool Equals(object? obj)
+            public override readonly bool Equals(object? obj)
             {
                 return obj is WNDCLASS other && Equals(other);
             }
 
-            public override int GetHashCode()
+            public override readonly int GetHashCode()
             {
                 return HashCode.Combine(style, lpfnWndProc, cbClsExtra, cbWndExtra, hInstance, hIcon, HashCode.Combine(hCursor, hbrBackground, lpszMenuName?.GetHashCode(StringComparison.Ordinal), lpszClassName.GetHashCode(StringComparison.Ordinal)));
             }
