@@ -342,7 +342,7 @@ internal static partial class WinApi
         };
 
         ushort atom = RegisterClass(ref wc);
-        if (atom == 0)
+        if (atom is 0)
         {
             int err = Marshal.GetLastWin32Error();
             throw new Win32Exception(err);
@@ -367,7 +367,6 @@ internal static partial class WinApi
         int error = Marshal.GetLastWin32Error();
         throw new Win32Exception(error);
     }
-
 
     public static int RegisterToWindowMessage(string messageName)
     {
