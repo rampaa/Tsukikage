@@ -497,6 +497,15 @@ internal static class OcrUtils
         SendOutput("");
     }
 
+    // TODO:
+    // It cannot handle the following cases, even though it could theoretically be extended to do so:
+    // 1. OCR results containing extra spaces compared to the TextHooker text, e.g., "愛　の　証" vs "愛の証".
+    // 2. OCR results hallucinating leading or trailing characters that are not present in the TextHooker text, e.g., "愛の証…" vs "愛の証".
+    // 3. OCR results missing leading or trailing characters that are present in the TextHooker text, e.g., "愛の証" vs "…愛の証…".
+    // It is unclear how common these cases are in practice, so further investigation is needed to determine whether supporting them is worthwhile.
+    // For the second case, simply replacing the hallucinated characters with whitespace (or another more suitable character, or even leaving them as is) may be less error-prone than adjusting the bounding boxes.
+    // For the third case, we would need to trim leading and trailing punctuation (and whitespace characters) from the TextHooker text and re-run the algorithm for each combination, which could require up to three runs in the worst case.
+    // Extra characters hallucinated in the middle of the text (excluding whitespace, see the first case) cannot be handled safely, so they are intentionally not supported.
     private static bool TryReplaceOcrTextWithTextHookerText(string normalizedTextHookerText, string textFromOcr, [NotNullWhen(true)] out string? resultText)
     {
         if (textFromOcr.Length is 0)
@@ -509,7 +518,15 @@ internal static class OcrUtils
             ? textFromOcr
             : textFromOcr.Normalize(NormalizationForm.FormC);
 
-        if (normalizedTextFromOcr.Length != textFromOcr.Length)
+        int normalizedTextFromOcrGraphemeCount = normalizedTextFromOcr.GetGraphemeCount();
+        if (normalizedTextFromOcrGraphemeCount != textFromOcr.GetGraphemeCount())
+        {
+            resultText = null;
+            return false;
+        }
+
+        int normalizedTextHookerTextGraphemeCount = normalizedTextHookerText.GetGraphemeCount();
+        if (normalizedTextFromOcrGraphemeCount != normalizedTextHookerTextGraphemeCount)
         {
             resultText = null;
             return false;
@@ -518,15 +535,12 @@ internal static class OcrUtils
         const float similarityThreshold = 0.7f;
         const float hardMismatchPenalty = 1.0f;
         const float softMismatchPenalty = 0.4f;
-        // const float spaceMismatchPenalty = 0.3f;
 
         float mismatchPenalty = 0f;
-        int ocrRuneCount = 0;
         GraphemeEnumerator normalizedTextFromTextHookerEnumerator = normalizedTextHookerText.EnumerateGraphemes();
         GraphemeEnumerator normalizedTextFromOcrEnumerator = normalizedTextFromOcr.EnumerateGraphemes();
 
-        int normalizedTextFromTextHookerLength = normalizedTextHookerText.Length;
-        float mismatchThreshold = normalizedTextFromTextHookerLength * (1f - similarityThreshold);
+        float mismatchThreshold = normalizedTextFromOcrGraphemeCount * (1f - similarityThreshold);
         while (true)
         {
             bool hasTextHookerRune = normalizedTextFromTextHookerEnumerator.MoveNext();
@@ -544,7 +558,6 @@ internal static class OcrUtils
 
             ReadOnlySpan<char> textHookerRune = normalizedTextFromTextHookerEnumerator.Current;
             ReadOnlySpan<char> ocrRune = normalizedTextFromOcrEnumerator.Current;
-            ++ocrRuneCount;
 
             if (textHookerRune == ocrRune)
             {
@@ -595,7 +608,7 @@ internal static class OcrUtils
             }
         }
 
-        bool result = mismatchPenalty <= ocrRuneCount * (1f - similarityThreshold);
+        bool result = mismatchPenalty <= normalizedTextFromOcrGraphemeCount * (1f - similarityThreshold);
         resultText = result ? normalizedTextHookerText : null;
         return result;
     }
