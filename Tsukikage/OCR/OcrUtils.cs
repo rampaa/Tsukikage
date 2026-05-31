@@ -525,23 +525,11 @@ internal static class OcrUtils
         GraphemeEnumerator normalizedTextFromTextHookerEnumerator = normalizedTextHookerText.EnumerateGraphemes();
         GraphemeEnumerator normalizedTextFromOcrEnumerator = normalizedTextFromOcr.EnumerateGraphemes();
 
-        StringBuilder finalText = new(textFromOcr.Length);
-
-        bool moveNormalizedTextFromTextHookerEnumerator = true;
         int normalizedTextFromTextHookerLength = normalizedTextHookerText.Length;
+        float mismatchThreshold = normalizedTextFromTextHookerLength * (1f - similarityThreshold);
         while (true)
         {
-            bool hasTextHookerRune;
-            if (moveNormalizedTextFromTextHookerEnumerator)
-            {
-                hasTextHookerRune = normalizedTextFromTextHookerEnumerator.MoveNext();
-            }
-            else
-            {
-                hasTextHookerRune = true;
-                moveNormalizedTextFromTextHookerEnumerator = true;
-            }
-
+            bool hasTextHookerRune = normalizedTextFromTextHookerEnumerator.MoveNext();
             bool hasOcrRune = normalizedTextFromOcrEnumerator.MoveNext();
             if (hasTextHookerRune != hasOcrRune)
             {
@@ -560,13 +548,11 @@ internal static class OcrUtils
 
             if (textHookerRune == ocrRune)
             {
-                _ = finalText.Append(textHookerRune);
                 continue;
             }
 
             if (textHookerRune.Length > 1 || ocrRune.Length > 1)
             {
-                _ = finalText.Append(textHookerRune);
                 mismatchPenalty += hardMismatchPenalty;
             }
             else
@@ -574,48 +560,43 @@ internal static class OcrUtils
                 char textHookerChar = textHookerRune[0];
                 char ocrChar = ocrRune[0];
 
-                char furtherNormalizedTextHookerChar = textHookerChar;
-                char furtherNormalizedOcrChar = ocrChar;
                 if (JapaneseUtils.NormalizationDict.TryGetValue(textHookerChar, out char mappedChar))
                 {
-                    furtherNormalizedTextHookerChar = mappedChar;
+                    textHookerChar = mappedChar;
                 }
 
                 if (JapaneseUtils.NormalizationDict.TryGetValue(ocrChar, out mappedChar))
                 {
-                    furtherNormalizedOcrChar = mappedChar;
+                    ocrChar = mappedChar;
                 }
 
-                if (furtherNormalizedTextHookerChar != furtherNormalizedOcrChar)
+                if (textHookerChar != ocrChar)
                 {
-                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(furtherNormalizedTextHookerChar, out mappedChar))
+                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(textHookerChar, out mappedChar))
                     {
-                        furtherNormalizedTextHookerChar = mappedChar;
+                        textHookerChar = mappedChar;
                     }
 
-                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(furtherNormalizedOcrChar, out mappedChar))
+                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(ocrChar, out mappedChar))
                     {
-                        furtherNormalizedOcrChar = mappedChar;
+                        ocrChar = mappedChar;
                     }
 
-                    mismatchPenalty += furtherNormalizedTextHookerChar == furtherNormalizedOcrChar
+                    mismatchPenalty += textHookerChar == ocrChar
                         ? softMismatchPenalty
                         : hardMismatchPenalty;
                 }
-
-                _ = finalText.Append(textHookerChar);
             }
 
-            if (1f - (mismatchPenalty / normalizedTextFromTextHookerLength) < similarityThreshold)
+            if (mismatchPenalty > mismatchThreshold)
             {
                 resultText = null;
                 return false;
             }
         }
 
-        float finalPenaltyResult = 1f - (mismatchPenalty / ocrRuneCount);
-        bool result = finalPenaltyResult >= similarityThreshold;
-        resultText = result ? finalText.ToString() : null;
+        bool result = mismatchPenalty <= ocrRuneCount * (1f - similarityThreshold);
+        resultText = result ? normalizedTextHookerText : null;
         return result;
     }
 }
