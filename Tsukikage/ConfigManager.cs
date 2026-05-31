@@ -20,6 +20,22 @@ internal static class ConfigManager
         ; Default value: true
         """;
 
+    private const string TriggerOcrWhenTextIsReceivedFromTextHookerComment =
+        """
+        ; Whether the program should automatically trigger a new OCR capture when text is received from the text hooker.
+        ; This option has no effect if TextHookerWebSocketAddress is not set.
+        ; Default value: false
+        """;
+
+    private const string TimeToWaitAfterReceivingTextFromTextHookerBeforeTriggeringOcrInMillisecondsComment =
+        """
+        ; Time to wait, in milliseconds, after receiving text from the text hooker before triggering OCR.
+        ; Useful when text hooker output arrives before the on-screen text is fully shown.
+        ; Set to 0 to trigger OCR immediately.
+        ; This option has no effect if TriggerOcrWhenTextIsReceivedFromTextHooker is false.
+        ; Default value: 0
+        """;
+
     private const string OcrJsonInputWebSocketAddressComment =
         """
         ; WebSocket address where the program receives OCR results from OwOCR in JSON format.
@@ -74,6 +90,12 @@ internal static class ConfigManager
         {AutoUpdateOnStartupComment}
         {nameof(AutoUpdateOnStartup)} = true
 
+        {TriggerOcrWhenTextIsReceivedFromTextHookerComment}
+        {nameof(TriggerOcrWhenTextIsReceivedFromTextHooker)} = false
+
+        {TimeToWaitAfterReceivingTextFromTextHookerBeforeTriggeringOcrInMillisecondsComment}
+        {nameof(TimeToWaitAfterReceivingTextFromTextHookerBeforeTriggeringOcrInMilliseconds)} = 0
+
         [{InputSection}]
         {OcrJsonInputWebSocketAddressComment}
         {nameof(OcrJsonInputWebSocketAddress)} = {DefaultOcrJsonInputWebSocketAddress}
@@ -101,6 +123,8 @@ internal static class ConfigManager
     private const string DefaultOutputWebSocketAddress = "ws://127.0.0.1:8768";
 
     public static bool AutoUpdateOnStartup { get; private set; } = true;
+    public static bool TriggerOcrWhenTextIsReceivedFromTextHooker { get; private set; } // = false;
+    public static int TimeToWaitAfterReceivingTextFromTextHookerBeforeTriggeringOcrInMilliseconds { get; private set; } // = 0;
     public static Uri OcrJsonInputWebSocketAddress { get; private set; } = new(DefaultOcrJsonInputWebSocketAddress, UriKind.Absolute);
     public static Uri? TextHookerWebSocketAddress { get; private set; } // = null;
     public static OutputPayload OutputType { get; private set; } = OutputPayload.GraphemeInfo;
@@ -123,6 +147,7 @@ internal static class ConfigManager
 
         Section generalSection = config[GeneralSection];
         AutoUpdateOnStartup = GetConfigValue(nameof(AutoUpdateOnStartup), AutoUpdateOnStartup, AutoUpdateOnStartupComment, generalSection);
+        TriggerOcrWhenTextIsReceivedFromTextHooker = GetConfigValue(nameof(TriggerOcrWhenTextIsReceivedFromTextHooker), TriggerOcrWhenTextIsReceivedFromTextHooker, TriggerOcrWhenTextIsReceivedFromTextHookerComment, generalSection);
 
         Section inputSection = config[InputSection];
         OcrJsonInputWebSocketAddress = GetWebSocketConfigValue(nameof(OcrJsonInputWebSocketAddress), OcrJsonInputWebSocketAddress, OcrJsonInputWebSocketAddressComment, inputSection);
@@ -230,6 +255,8 @@ internal static class ConfigManager
             $"""
             Current configs:
             Auto update on startup: {AutoUpdateOnStartup}
+            Trigger OCR when text is received from the Text Hooker: {TriggerOcrWhenTextIsReceivedFromTextHooker}
+            Time to wait after receiving text from Text Hooker before triggering OCR: {TimeToWaitAfterReceivingTextFromTextHookerBeforeTriggeringOcrInMilliseconds} ms
             OCR JSON Input WebSocket Address: {OcrJsonInputWebSocketAddress.OriginalString}
             Text hooker WebSocket Address: {TextHookerWebSocketAddress?.OriginalString ?? "Disabled"}
             Output Type: {OutputType}

@@ -16,4 +16,14 @@ internal static class OwocrUtils
     {
         return WinApi.IsEventStopped(OwocrRunningEventName);
     }
+
+    public static async Task TriggerOcr()
+    {
+        if (ConfigManager.TimeToWaitAfterReceivingTextFromTextHookerBeforeTriggeringOcrInMilliseconds > 0)
+        {
+            await Task.Delay(ConfigManager.TimeToWaitAfterReceivingTextFromTextHookerBeforeTriggeringOcrInMilliseconds).ConfigureAwait(false);
+        }
+
+        // TODO: Trigger OCR process
+    }
 }

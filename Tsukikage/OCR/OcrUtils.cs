@@ -76,6 +76,11 @@ internal static class OcrUtils
 
                 textHookerTextNode = s_textHookerTextBacklog.AddFirst(normalizedTextHookerText);
                 s_textHookerTextChanged = true;
+
+                if (ConfigManager.TriggerOcrWhenTextIsReceivedFromTextHooker)
+                {
+                    OwocrUtils.TriggerOcr().SafeFireAndForget("TriggerOcr failed");
+                }
             }
             else
             {
