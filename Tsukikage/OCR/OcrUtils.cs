@@ -506,6 +506,7 @@ internal static class OcrUtils
     // For the second case, simply replacing the hallucinated characters with whitespace (or another more suitable character, or even leaving them as is) may be less error-prone than adjusting the bounding boxes.
     // For the third case, we would need to trim leading and trailing punctuation (and whitespace characters) from the TextHooker text and re-run the algorithm for each combination, which could require up to three runs in the worst case.
     // Extra characters hallucinated in the middle of the text (excluding whitespace, see the first case) cannot be handled safely, so they are intentionally not supported.
+    // Missing characters in the middle of the OCRed text cannot be handled safely either, so they are also intentionally not supported.
     private static bool TryReplaceOcrTextWithTextHookerText(string normalizedTextHookerText, string textFromOcr, [NotNullWhen(true)] out string? resultText)
     {
         if (textFromOcr.Length is 0)
