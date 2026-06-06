@@ -18,10 +18,11 @@ internal static class Program
 
     public static async Task Main()
     {
+        Environment.CurrentDirectory = AppContext.BaseDirectory;
+
+        WinApi.AttachConsole();
         Console.InputEncoding = Encoding.Unicode;
         Console.OutputEncoding = Encoding.Unicode;
-
-        Environment.CurrentDirectory = AppContext.BaseDirectory;
 
         AppDomain.CurrentDomain.UnhandledException += LogUnhandledException;
         TaskScheduler.UnobservedTaskException += LogUnobservedTaskException;
@@ -29,8 +30,8 @@ internal static class Program
         ProfileOptimization.SetProfileRoot(AppContext.BaseDirectory);
         ProfileOptimization.StartProfile("Startup.Profile");
 
-        using PosixSignalRegistration termSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGTERM, static _ => HandleAppExit());
-        using PosixSignalRegistration sigHupSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGHUP, static _ => HandleAppExit());
+        using PosixSignalRegistration termSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGTERM, static _ => CleanupSync());
+        using PosixSignalRegistration sigHupSignalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGHUP, static _ => CleanupSync());
         Console.CancelKeyPress += Console_CancelKeyPress;
         AppDomain.CurrentDomain.ProcessExit += Console_AppExit;
 
@@ -40,11 +41,11 @@ internal static class Program
             bool webSocketServerStarted = await WebsocketServerUtils.InitServer(ConfigManager.OutputWebSocketAddress).ConfigureAwait(false);
             if (!webSocketServerStarted)
             {
+                await CleanupAsync().ConfigureAwait(false);
                 Console.WriteLine("Make sure no other Tsukikage instance is running.");
                 Console.WriteLine($"If another application is using {ConfigManager.OutputWebSocketAddress.OriginalString}, close it or change the {nameof(ConfigManager.OutputWebSocketAddress)} in Tsukikage.ini before restarting Tsukikage.");
                 Console.WriteLine("Press any key to exit...");
                 _ = Console.ReadKey();
-                HandleAppExit();
                 return;
             }
         }
@@ -88,21 +89,19 @@ internal static class Program
     private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
     {
         e.Cancel = true;
-        HandleAppExit();
-        WinApi.PostQuitMessage();
     }
 
     private static void Console_AppExit(object? sender, EventArgs e)
     {
-        HandleAppExit();
+        CleanupSync();
     }
 
-    private static void HandleAppExit()
+    private static void CleanupSync()
     {
-        Cleanup().GetAwaiter().GetResult();
+        CleanupAsync().GetAwaiter().GetResult();
     }
 
-    public static async Task Cleanup()
+    public static async Task CleanupAsync()
     {
         if (!s_cleanupStarted.TrySetTrue())
         {

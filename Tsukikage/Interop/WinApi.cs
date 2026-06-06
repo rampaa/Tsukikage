@@ -292,9 +292,10 @@ internal static partial class WinApi
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint GetModuleHandle(string? lpModuleName);
 
-        [LibraryImport(User32, EntryPoint = "PostQuitMessage")]
+        [LibraryImport(Kernel32, EntryPoint = "AllocConsole", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-        internal static partial void PostQuitMessage(int nExitCode);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool AllocConsole();
 
         [LibraryImport(Kernel32, EntryPoint = "OpenEventW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
@@ -536,9 +537,9 @@ internal static partial class WinApi
         return GetForegroundWindow();
     }
 
-    public static void PostQuitMessage()
+    public static void AttachConsole()
     {
-        NativeMethods.PostQuitMessage(0);
+        _ = AllocConsole();
     }
 
     public static void RunMessageLoop()

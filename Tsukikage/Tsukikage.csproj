@@ -15,7 +15,7 @@
     <Deterministic>true</Deterministic>
     <CETCompat>false</CETCompat>
     
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <AnalysisLevel>10-all</AnalysisLevel>
     <ApplicationIcon>icon.ico</ApplicationIcon>

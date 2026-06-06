@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using Tsukikage.Interop;
 
 namespace Tsukikage.Network;
 
@@ -109,7 +108,7 @@ internal static class NetworkUtils
                 }
             }
 
-            await Program.Cleanup().ConfigureAwait(false);
+            await Program.CleanupAsync().ConfigureAwait(false);
 
             using Process? process = Process.Start(new ProcessStartInfo
             {
@@ -119,7 +118,7 @@ internal static class NetworkUtils
                 UseShellExecute = true
             });
 
-            WinApi.PostQuitMessage();
+            Environment.Exit(0);
         }
         else
         {
