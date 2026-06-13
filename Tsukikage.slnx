@@ -1,3 +1,17 @@
 <Solution>
-  <Project Path="Tsukikage/Tsukikage.csproj" />
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Tsukikage.Tests/Tsukikage.Tests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+  </Project>
+  <Project Path="Tsukikage/Tsukikage.csproj" DefaultStartup="true">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Platform Solution="*|ARM64" Project="ARM64" />
+  </Project>
 </Solution>

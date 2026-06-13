@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -134,8 +133,8 @@ internal static class OcrUtils
             {
                 string paragraphText = paragraph.Text;
                 int paragraphTextLength = paragraphText.Length;
-                if (textHookerTextLength / 2f > paragraphTextLength
-                    || paragraphTextLength / 2f > textHookerTextLength)
+                if (textHookerTextLength / 3f > paragraphTextLength
+                    || paragraphTextLength / 3f > textHookerTextLength)
                 {
                     continue;
                 }
@@ -150,15 +149,15 @@ internal static class OcrUtils
                     s_textHookerTextChanged = false;
                     s_ocrTextChanged = false;
 
-                    Console.WriteLine("Same text.");
+                    Console.WriteLine("OCR text is the same as TextHooker text.");
                     return;
                 }
 
-                if (TryReplaceOcrTextWithTextHookerText(textHookerText, paragraphText, out string? resultText))
+                if (TextCorrectionUtils.TryReplaceOcrTextWithTextHookerText(textHookerText, paragraphText, out string? resultText))
                 {
                     Console.WriteLine("Replaced OCR text with TextHooker text.");
-                    //Console.WriteLine($"OCR text:\n{paragraphText}");
-                    //Console.WriteLine($"Text hooker text:\n{resultText}\n");
+                    Console.WriteLine($"OCR text:\n{paragraphText}");
+                    Console.WriteLine($"Text hooker text:\n{resultText}\n");
 
                     paragraph.Text = resultText;
                     RebuildOcrResult(paragraph);
@@ -204,6 +203,7 @@ internal static class OcrUtils
         SendEmptyString();
     }
 
+    // TODO: This currently does not handle cases where we've replaced a BMP character with a non-BMP one or vice versa
     private static void RebuildOcrResult(Paragraph paragraph)
     {
         int currentIndex = 0;
@@ -495,122 +495,5 @@ internal static class OcrUtils
         s_mouseWasOverWordBoundingBox = false;
         s_outputDelayTimer.Enabled = false;
         SendOutput("");
-    }
-
-    // TODO:
-    // It cannot handle the following cases, even though it could theoretically be extended to do so:
-    // 1. OCR results containing extra spaces compared to the TextHooker text, e.g., "愛　の　証" vs "愛の証".
-    // 2. OCR results hallucinating leading or trailing characters that are not present in the TextHooker text, e.g., "愛の証…" vs "愛の証".
-    // 3. OCR results missing leading or trailing characters that are present in the TextHooker text, e.g., "愛の証" vs "…愛の証…".
-    // It is unclear how common these cases are in practice, so further investigation is needed to determine whether supporting them is worthwhile.
-    // For the second case, simply replacing the hallucinated characters with whitespace (or another more suitable character, or even leaving them as is) may be less error-prone than adjusting the bounding boxes.
-    // For the third case, we would need to trim leading and trailing punctuation (and whitespace characters) from the TextHooker text and re-run the algorithm for each combination, which could require up to three runs in the worst case.
-    // Extra characters hallucinated in the middle of the text (excluding whitespace, see the first case) cannot be handled safely, so they are intentionally not supported.
-    // Missing characters in the middle of the OCRed text cannot be handled safely either, so they are also intentionally not supported.
-    private static bool TryReplaceOcrTextWithTextHookerText(string normalizedTextHookerText, string textFromOcr, [NotNullWhen(true)] out string? resultText)
-    {
-        if (textFromOcr.Length is 0)
-        {
-            resultText = null;
-            return false;
-        }
-
-        string normalizedTextFromOcr = textFromOcr.IsNormalized(NormalizationForm.FormC)
-            ? textFromOcr
-            : textFromOcr.Normalize(NormalizationForm.FormC);
-
-        int normalizedTextFromOcrGraphemeCount = normalizedTextFromOcr.GetGraphemeCount();
-        if (normalizedTextFromOcrGraphemeCount != textFromOcr.GetGraphemeCount())
-        {
-            resultText = null;
-            return false;
-        }
-
-        int normalizedTextHookerTextGraphemeCount = normalizedTextHookerText.GetGraphemeCount();
-        if (normalizedTextFromOcrGraphemeCount != normalizedTextHookerTextGraphemeCount)
-        {
-            resultText = null;
-            return false;
-        }
-
-        const float similarityThreshold = 0.7f;
-        const float hardMismatchPenalty = 1.0f;
-        const float softMismatchPenalty = 0.4f;
-
-        float mismatchPenalty = 0f;
-        GraphemeEnumerator normalizedTextFromTextHookerEnumerator = normalizedTextHookerText.EnumerateGraphemes();
-        GraphemeEnumerator normalizedTextFromOcrEnumerator = normalizedTextFromOcr.EnumerateGraphemes();
-
-        float mismatchThreshold = normalizedTextFromOcrGraphemeCount * (1f - similarityThreshold);
-        while (true)
-        {
-            bool hasTextHookerRune = normalizedTextFromTextHookerEnumerator.MoveNext();
-            bool hasOcrRune = normalizedTextFromOcrEnumerator.MoveNext();
-            if (hasTextHookerRune != hasOcrRune)
-            {
-                resultText = null;
-                return false;
-            }
-
-            if (!hasTextHookerRune)
-            {
-                break;
-            }
-
-            ReadOnlySpan<char> textHookerRune = normalizedTextFromTextHookerEnumerator.Current;
-            ReadOnlySpan<char> ocrRune = normalizedTextFromOcrEnumerator.Current;
-
-            if (textHookerRune == ocrRune)
-            {
-                continue;
-            }
-
-            if (textHookerRune.Length > 1 || ocrRune.Length > 1)
-            {
-                mismatchPenalty += hardMismatchPenalty;
-            }
-            else
-            {
-                char textHookerChar = textHookerRune[0];
-                char ocrChar = ocrRune[0];
-
-                if (JapaneseUtils.NormalizationDict.TryGetValue(textHookerChar, out char mappedChar))
-                {
-                    textHookerChar = mappedChar;
-                }
-
-                if (JapaneseUtils.NormalizationDict.TryGetValue(ocrChar, out mappedChar))
-                {
-                    ocrChar = mappedChar;
-                }
-
-                if (textHookerChar != ocrChar)
-                {
-                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(textHookerChar, out mappedChar))
-                    {
-                        textHookerChar = mappedChar;
-                    }
-
-                    if (JapaneseUtils.FrequentlyMisparsedCharactersDict.TryGetValue(ocrChar, out mappedChar))
-                    {
-                        ocrChar = mappedChar;
-                    }
-
-                    mismatchPenalty += textHookerChar == ocrChar
-                        ? softMismatchPenalty
-                        : hardMismatchPenalty;
-                }
-            }
-
-            if (mismatchPenalty > mismatchThreshold)
-            {
-                resultText = null;
-                return false;
-            }
-        }
-
-        bool result = mismatchPenalty <= normalizedTextFromOcrGraphemeCount * (1f - similarityThreshold);
-        resultText = result ? normalizedTextHookerText : null;
-        return result;
     }
 }
