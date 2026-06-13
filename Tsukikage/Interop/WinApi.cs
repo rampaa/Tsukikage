@@ -8,7 +8,6 @@ namespace Tsukikage.Interop;
 
 internal static partial class WinApi
 {
-    private static readonly bool s_is64BitProcess = Environment.Is64BitProcess;
     private static readonly WndProc s_wndProc = WindowProc; //
 
 #pragma warning disable IDE1006 // Naming rule violation
@@ -249,14 +248,6 @@ internal static partial class WinApi
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial ulong GetClipboardSequenceNumber();
 
-        [LibraryImport(User32, EntryPoint = "SetWindowLongW", SetLastError = true)]
-        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-        private static partial int SetWindowLong32(nint hWnd, int nIndex, int dwNewLong);
-
-        [LibraryImport(User32, EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
-        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-        private static partial nint SetWindowLongPtr64(nint hWnd, int nIndex, nint dwNewLong);
-
         [LibraryImport(User32, EntryPoint = "SetWindowsHookExW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         internal static partial nint SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, nint hMod, uint dwThreadId);
@@ -307,27 +298,29 @@ internal static partial class WinApi
         internal static partial nint CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 #pragma warning restore CA1711 // Identifiers should not have incorrect suffix
 
+#if X86
+        [LibraryImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        private static partial int SetWindowLongPtr32(nint hWnd, int nIndex, int dwNewLong);
+
         internal static nint SetWindowLongPtr(nint hWnd, int nIndex, nint dwNewLong)
         {
-            return s_is64BitProcess
-                ? SetWindowLongPtr64(hWnd, nIndex, dwNewLong)
-                : SetWindowLong32(hWnd, nIndex, (int)dwNewLong);
+            return SetWindowLongPtr32(hWnd, nIndex, (int)dwNewLong);
         }
 
-        [LibraryImport(User32, EntryPoint = "GetWindowLongW", SetLastError = true)]
+        [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-        private static partial int GetWindowLongPtr32(nint hWnd, int nIndex);
+        internal static partial int GetWindowLongPtr(nint hWnd, int nIndex);
 
-        [LibraryImport(User32, EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+#elif X64 || ARM64
+        [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-        private static partial nint GetWindowLongPtr64(nint hWnd, int nIndex);
+        internal static partial nint SetWindowLongPtr(nint hWnd, int nIndex, nint dwNewLong);
 
-        internal static nint GetWindowLongPtr(nint hWnd, int nIndex)
-        {
-            return s_is64BitProcess
-                ? GetWindowLongPtr64(hWnd, nIndex)
-                : GetWindowLongPtr32(hWnd, nIndex);
-        }
+        [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        internal static partial nint GetWindowLongPtr(nint hWnd, int nIndex);
+#endif
 
         // ReSharper restore InconsistentNaming
     }

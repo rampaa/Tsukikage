@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace Tsukikage.Network;
@@ -45,12 +44,14 @@ internal static class NetworkUtils
                     Version latestTsukikageVersion = new(tagName);
                     if (latestTsukikageVersion > AppInfo.TsukikageVersion)
                     {
-                        string architecture = RuntimeInformation.ProcessArchitecture is Architecture.Arm64
-                            ? "arm64"
-                            : AppInfo.Is64BitProcess
-                                ? "x64"
-                                : "x86";
-
+                        const string architecture =
+#if ARM64
+                                                    "arm64";
+#elif X64
+                                                    "x64";
+#elif X86
+                                                    "x86";
+#endif
                         JsonElement assets = jsonDocument.RootElement.GetProperty("assets");
                         foreach (JsonElement asset in assets.EnumerateArray())
                         {
