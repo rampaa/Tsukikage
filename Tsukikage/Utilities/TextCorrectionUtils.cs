@@ -292,22 +292,22 @@ internal static class TextCorrectionUtils
             ArrayPool<int>.Shared.Return(ocrGraphemeBoundaries);
             ArrayPool<int>.Shared.Return(textHookerGraphemeBoundaries);
 
-            if (penaltyTable != null)
+            if (penaltyTable is not null)
             {
                 ArrayPool<int>.Shared.Return(penaltyTable);
             }
 
-            if (backtraceTable != null)
+            if (backtraceTable is not null)
             {
                 ArrayPool<AlignmentDirection>.Shared.Return(backtraceTable);
             }
 
-            if (bestResultBuffer != null)
+            if (bestResultBuffer is not null)
             {
                 ArrayPool<char>.Shared.Return(bestResultBuffer);
             }
 
-            if (comparisonBuffer != null)
+            if (comparisonBuffer is not null)
             {
                 ArrayPool<char>.Shared.Return(comparisonBuffer);
             }
