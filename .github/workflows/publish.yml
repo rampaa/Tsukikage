@@ -14,12 +14,17 @@ jobs:
           - kind: windowsx64
             os: windows-latest
             target: win-x64
+            platform: x64
+            
           - kind: windowsx86
             os: windows-latest
             target: win-x86
+            platform: x86
+            
           - kind: windowsarm64
             os: windows-latest
-            target: win-arm64
+            target: ARM64
+            
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -37,7 +42,7 @@ jobs:
           release_name="Tsukikage-$tag-${{ matrix.target }}"
           
           # Build everything
-          dotnet publish Tsukikage/Tsukikage.csproj --runtime "${{ matrix.target }}" -c Release -o "$release_name"
+          dotnet publish Tsukikage/Tsukikage.csproj --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:Platform=${{ matrix.platform }}
           
           # Pack files
           7z a -tzip "${release_name}.zip" "./${release_name}/*"
