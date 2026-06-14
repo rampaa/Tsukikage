@@ -23,7 +23,8 @@ jobs:
             
           - kind: windowsarm64
             os: windows-latest
-            target: ARM64
+            target: win-arm64
+            platform: ARM64
             
     runs-on: ${{ matrix.os }}
     steps:
