@@ -2,7 +2,7 @@
 
 namespace Tsukikage.Tests;
 
-internal sealed class TextCorrectionUtilsTests
+file sealed class TextCorrectionUtilsTests
 {
     [TestCase("愛の証", "愛の証", "愛の証")]
     [TestCase("愛の証", "愛の振", "愛の証")]

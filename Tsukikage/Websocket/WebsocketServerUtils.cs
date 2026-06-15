@@ -24,7 +24,7 @@ internal static class WebsocketServerUtils
 
         FleckLog.Level = LogLevel.Info;
 
-        Server = new(webSocketServerAddress.OriginalString)
+        Server = new WebSocketServer(webSocketServerAddress.OriginalString)
         {
             RestartAfterListenError = true
         };

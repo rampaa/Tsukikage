@@ -12,16 +12,19 @@ internal sealed class AtomicBool
         _value = initialValue ? True : False;
     }
 
+    // ReSharper disable once UnusedMember.Global
     public bool Read()
     {
         return Volatile.Read(ref _value) is not False;
     }
 
+    // ReSharper disable once UnusedMember.Global
     public void SetTrue()
     {
         Volatile.Write(ref _value, True);
     }
 
+    // ReSharper disable once UnusedMember.Global
     public void SetFalse()
     {
         Volatile.Write(ref _value, False);

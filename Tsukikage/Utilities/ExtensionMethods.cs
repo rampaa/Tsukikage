@@ -40,9 +40,4 @@ internal static class ExtensionMethods
 
         return count;
     }
-
-    public static GraphemeEnumerator EnumerateGraphemes(this ReadOnlySpan<char> text)
-    {
-        return new GraphemeEnumerator(text);
-    }
 }

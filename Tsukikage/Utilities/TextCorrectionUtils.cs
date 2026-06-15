@@ -42,7 +42,7 @@ internal static class TextCorrectionUtils
     // 2. OCR results containing extra spaces compared to the TextHooker text:
     //    normalizedTextHookerText: "愛の証", ocrText: "愛　の　振", resultText is "愛　の　証"
     // 3. OCR results hallucinating leading or trailing characters that are not present in the TextHooker text. At most MaxLeadingEdgeSkips/MaxTrailingEdgeSkips OCR graphemes may be skipped at each edge regardless of budget.
-    //    normalizedTextHookerText: "愛の証", ocrText: "愛の振…", resultText: "愛の証…". 
+    //    normalizedTextHookerText: "愛の証", ocrText: "愛の振…", resultText: "愛の証…".
     // 4. OCR results missing leading or trailing punctuation/whitespace characters that are present in the TextHooker text:
     //    normalizedTextHookerText: "…愛の証…", ocrText: "愛の振", resultText: "愛の証".
     // 5. OCR result missing punctuation/whitespace characters in the middle of the text:
@@ -84,7 +84,7 @@ internal static class TextCorrectionUtils
                 --textHookerTextContentEndIndex;
             }
 
-            int textHookerTextVariantCapacity = 0;
+            int textHookerTextVariantCapacity;
             bool textHookerTextStartsWithContent = textHookerTextContentStartIndex is 0;
             bool textHookerTextEndsWithContent = textHookerTextContentEndIndex == textHookerTextGraphemeCount - 1;
             if (textHookerTextStartsWithContent && textHookerTextEndsWithContent)
@@ -133,9 +133,8 @@ internal static class TextCorrectionUtils
             // Negative values mean all rows are eligible
             int trailingSkipStartIndex = ocrTextGraphemeCount - MaxTrailingEdgeSkips;
 
-            for (int i = 0; i < textHookerTextVariantRanges.Length; i++)
+            foreach ((int textHookerTextStartIndex, int textHookerTexEndIndex) in textHookerTextVariantRanges)
             {
-                (int textHookerTextStartIndex, int textHookerTexEndIndex) = textHookerTextVariantRanges[i];
                 int textHookerTextLength = textHookerTexEndIndex - textHookerTextStartIndex + 1;
                 int tableRowStride = textHookerTextLength + 1;
                 int cellsToClear = (ocrTextGraphemeCount + 1) * tableRowStride;
@@ -359,6 +358,7 @@ internal static class TextCorrectionUtils
                     break;
                 }
 
+                // ReSharper disable once RedundantEnumCaseLabelForDefaultSection
                 case AlignmentDirection.None:
                 default:
                 {
@@ -371,20 +371,20 @@ internal static class TextCorrectionUtils
         return writePosition;
     }
 
-    private static int FillGraphemeBoundaries(ReadOnlySpan<char> text, int[] graphemeBoundries)
+    private static int FillGraphemeBoundaries(ReadOnlySpan<char> text, int[] graphemeBoundaries)
     {
         int graphemeCount = 0;
         int graphemeIndex = 0;
 
         while (graphemeIndex < text.Length)
         {
-            graphemeBoundries[graphemeCount] = graphemeIndex;
+            graphemeBoundaries[graphemeCount] = graphemeIndex;
             ++graphemeCount;
 
             graphemeIndex += StringInfo.GetNextTextElementLength(text[graphemeIndex..]);
         }
 
-        graphemeBoundries[graphemeCount] = text.Length;
+        graphemeBoundaries[graphemeCount] = text.Length;
         return graphemeCount;
     }
 
