@@ -38,8 +38,6 @@ internal static class MouseMoveWorker
         while (true)
         {
             _ = s_autoResetEvent.WaitOne();
-
-
             while (s_pending.TrySetFalse())
             {
                 Point currentPoint;
