@@ -8,6 +8,8 @@ Download from the [releases page](https://github.com/rampaa/Tsukikage/releases).
 
 ## How do I use Tsukikage?
 
+**Important:** When using Tsukikage with a game that requires administrator privileges, you must also run Tsukikage as an administrator. Otherwise, it will not be able to track your cursor position correctly while that game has the mouse focus.
+
 ### 1. Install and configure [OwOCR](https://github.com/AuroraWright/owocr)
 
 To use Tsukikage, you first need to [install OwOCR](https://github.com/AuroraWright/owocr?tab=readme-ov-file#installation).  
