@@ -3,6 +3,7 @@ using System.Text;
 using Tsukikage.Interop;
 using Tsukikage.OCR.OwOCR;
 using Tsukikage.OCR.Tsukikage;
+using Tsukikage.Utilities;
 
 namespace Tsukikage.OCR;
 
@@ -76,8 +77,15 @@ internal static class MapperUtils
                 for (int j = 0; j < graphemes.Length; j++)
                 {
                     OwocrSymbol owocrSymbol = owocrWord.Symbols[j];
-                    graphemes[j] = new Grapheme(owocrSymbol.Text, new BoundingBox(owocrSymbol.BoundingBox, imageProperties));
 
+                    int symbolGraphemeCount = owocrSymbol.Text.GetGraphemeCount();
+                    int symbolSeparatorGraphemeCount = owocrSymbol.Separator is not null
+                        ? owocrSymbol.Separator.GetGraphemeCount()
+                        : 0;
+
+                    int symbolSeparatorCharLength = owocrSymbol.Separator?.Length ?? 0;
+
+                    graphemes[j] = new Grapheme(owocrSymbol.Text, new BoundingBox(owocrSymbol.BoundingBox, imageProperties), symbolGraphemeCount, symbolSeparatorGraphemeCount, symbolSeparatorCharLength);
                     _ = wordStringBuilder.Append(owocrSymbol.Text);
                     if (owocrSymbol.Separator is not null)
                     {
@@ -88,7 +96,14 @@ internal static class MapperUtils
                 owocrWord.Text = wordStringBuilder.ToString();
             }
 
-            words[i] = new Word(owocrWord.Text, new BoundingBox(owocrWord.BoundingBox, imageProperties), graphemes);
+            int wordGraphemeCount = owocrWord.Text.GetGraphemeCount();
+            int wordSeparatorGraphemeCount = owocrWord.Separator is not null
+                ? owocrWord.Separator.GetGraphemeCount()
+                : 0;
+
+            int wordSeparatorCharLength = owocrWord.Separator?.Length ?? 0;
+
+            words[i] = new Word(owocrWord.Text, new BoundingBox(owocrWord.BoundingBox, imageProperties), graphemes, wordGraphemeCount, wordSeparatorGraphemeCount, wordSeparatorCharLength);
 
             _ = lineStringBuilder.Append(owocrWord.Text);
             if (owocrWord.Separator is not null)

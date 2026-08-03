@@ -32,9 +32,7 @@ internal static class ExtensionMethods
         int index = 0;
         while (index < text.Length)
         {
-            int length = StringInfo.GetNextTextElementLength(text[index..]);
-            index += length;
-
+            index += StringInfo.GetNextTextElementLength(text[index..]);
             ++count;
         }
 

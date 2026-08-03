@@ -203,7 +203,6 @@ internal static class OcrUtils
         SendEmptyString();
     }
 
-    // TODO: This currently does not handle cases where we've replaced a BMP character with a non-BMP one or vice versa
     private static void RebuildOcrResult(Paragraph paragraph)
     {
         int currentIndex = 0;
@@ -212,19 +211,64 @@ internal static class OcrUtils
         foreach (Line line in paragraph.Lines)
         {
             int lineStartIndex = currentIndex;
-
             foreach (Word word in line.Words)
             {
-                int wordLength = word.Text.Length;
+                int wordStartIndex = currentIndex;
+                if (word.Graphemes is not null)
+                {
+                    foreach (Grapheme grapheme in word.Graphemes)
+                    {
+                        int graphemeStartIndex = currentIndex;
+                        for (int i = 0; i < grapheme.GraphemeCount; i++)
+                        {
+                            currentIndex += StringInfo.GetNextTextElementLength(newParagraphText.AsSpan(currentIndex));
+                        }
 
-                word.Text = newParagraphText[currentIndex..(currentIndex + wordLength)];
-                currentIndex += wordLength;
+                        ReadOnlySpan<char> newGraphemeSpan = newParagraphText.AsSpan(graphemeStartIndex, currentIndex - graphemeStartIndex);
+                        if (!newGraphemeSpan.SequenceEqual(grapheme.Text))
+                        {
+                            grapheme.Text = new string(newGraphemeSpan);
+                        }
+
+                        int separatorStartIndex = currentIndex;
+                        for (int i = 0; i < grapheme.SeparatorGraphemeCount; i++)
+                        {
+                            currentIndex += StringInfo.GetNextTextElementLength(newParagraphText.AsSpan(currentIndex));
+                        }
+                        grapheme.SeparatorCharLength = currentIndex - separatorStartIndex;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < word.GraphemeCount; i++)
+                    {
+                        currentIndex += StringInfo.GetNextTextElementLength(newParagraphText.AsSpan(currentIndex));
+                    }
+                }
+
+                ReadOnlySpan<char> newWordSpan = newParagraphText.AsSpan(wordStartIndex, currentIndex - wordStartIndex);
+                if (!newWordSpan.SequenceEqual(word.Text))
+                {
+                    word.Text = new string(newWordSpan);
+                }
+
+                int wordSeparatorStartIndex = currentIndex;
+                for (int i = 0; i < word.SeparatorGraphemeCount; i++)
+                {
+                    currentIndex += StringInfo.GetNextTextElementLength(newParagraphText.AsSpan(currentIndex));
+                }
+                word.SeparatorCharLength = currentIndex - wordSeparatorStartIndex;
             }
 
-            line.Text = newParagraphText[lineStartIndex..currentIndex];
+            ReadOnlySpan<char> newLineSpan = newParagraphText.AsSpan(lineStartIndex, currentIndex - lineStartIndex);
+            if (!newLineSpan.SequenceEqual(line.Text))
+            {
+                line.Text = new string(newLineSpan);
+            }
         }
-    }
 
+        Debug.Assert(currentIndex == newParagraphText.Length);
+    }
 
     private static OcrResult? GetOcrResultFromJson(string text)
     {
@@ -349,10 +393,10 @@ internal static class OcrUtils
                             for (int prevWordIndex = 0; prevWordIndex < wordIndex; prevWordIndex++)
                             {
                                 Word prevWord = words[prevWordIndex];
-                                charStartIndex += prevWord.Text.Length;
+                                charStartIndex += prevWord.Text.Length + prevWord.SeparatorCharLength;
                             }
 
-                            if (word.Text.Length > 1)
+                            if (word.GraphemeCount > 1)
                             {
                                 bool graphemeFound = false;
                                 if (word.Graphemes is not null)
@@ -362,7 +406,13 @@ internal static class OcrUtils
                                         Grapheme grapheme = word.Graphemes[graphemeIndex];
                                         if (grapheme.BoundingBox.IsMouseOver(mousePosition))
                                         {
-                                            charStartIndex += graphemeIndex;
+                                            int charOffsetWithinWord = 0;
+                                            for (int i = 0; i < graphemeIndex; i++)
+                                            {
+                                                charOffsetWithinWord += word.Graphemes[i].Text.Length + word.Graphemes[i].SeparatorCharLength;
+                                            }
+
+                                            charStartIndex += charOffsetWithinWord;
                                             graphemeFound = true;
                                             break;
                                         }
@@ -371,10 +421,18 @@ internal static class OcrUtils
 
                                 if (!graphemeFound)
                                 {
-                                    int graphemeCount = word.Text.GetGraphemeCount();
+                                    int graphemeCount = word.GraphemeCount;
                                     if (graphemeCount > 1)
                                     {
-                                        charStartIndex += word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, line.WritingDirection);
+                                        int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, line.WritingDirection);
+
+                                        int charOffsetWithinWord = 0;
+                                        for (int i = 0; i < graphemeIndex; i++)
+                                        {
+                                            charOffsetWithinWord += StringInfo.GetNextTextElementLength(word.Text.AsSpan(charOffsetWithinWord));
+                                        }
+
+                                        charStartIndex += charOffsetWithinWord;
                                     }
                                 }
                             }
@@ -405,7 +463,7 @@ internal static class OcrUtils
                         {
                             output = word.Text;
 
-                            if (word.Text.Length > 1)
+                            if (word.GraphemeCount > 1)
                             {
                                 bool graphemeFound = false;
                                 if (word.Graphemes is not null)
@@ -423,7 +481,7 @@ internal static class OcrUtils
 
                                 if (!graphemeFound)
                                 {
-                                    int graphemeCount = word.Text.GetGraphemeCount();
+                                    int graphemeCount = word.GraphemeCount;
                                     if (graphemeCount > 1)
                                     {
                                         int graphemeIndex = word.GetGraphemeIndexFromPosition(mousePosition, graphemeCount, line.WritingDirection);

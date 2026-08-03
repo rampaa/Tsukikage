@@ -4,11 +4,14 @@ using Tsukikage.Utilities;
 namespace Tsukikage.OCR.Tsukikage;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-internal sealed record class Word(string Text, in BoundingBox BoundingBox, Grapheme[]? Graphemes)
+internal sealed record class Word(string Text, in BoundingBox BoundingBox, Grapheme[]? Graphemes, int GraphemeCount, int SeparatorGraphemeCount, int SeparatorCharLength)
 {
     public BoundingBox BoundingBox { get; } = BoundingBox;
     public string Text { get; set; } = Text;
     public Grapheme[]? Graphemes { get; } = Graphemes;
+    public int GraphemeCount { get; } = GraphemeCount;
+    public int SeparatorGraphemeCount { get; } = SeparatorGraphemeCount;
+    public int SeparatorCharLength { get; set; } = SeparatorCharLength;
 
     public int GetGraphemeIndexFromPosition(Point mousePosition, int graphemeCount, WritingDirection writingDirection)
     {
