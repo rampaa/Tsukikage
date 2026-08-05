@@ -72,7 +72,7 @@ internal static class ConfigManager
         """
         ; Whether OCR lines should be sent automatically when an OCR result is received.
         ; Only applies when OutputPayload is GraphemeInfo. GraphemeStartIndex will be -1.
-        ; Default value: false
+        ; Default value: true
         """;
 
     private const string IniFileContent =
@@ -102,7 +102,7 @@ internal static class ConfigManager
         {nameof(OutputWebSocketAddress)} = {DefaultOutputWebSocketAddress}
 
         {SendOcrLinesOnReceiveComment}
-        {nameof(SendOcrLinesOnReceive)} = false
+        {nameof(SendOcrLinesOnReceive)} = true
         """;
 
     #endregion
@@ -117,7 +117,7 @@ internal static class ConfigManager
     public static double OutputDelayInMilliseconds { get; private set; } // = 0;
     public static OutputIpcMethod OutputIpcMethod { get; private set; } = OutputIpcMethod.WebSocket;
     public static Uri OutputWebSocketAddress { get; private set; } = new(DefaultOutputWebSocketAddress, UriKind.Absolute);
-    public static bool SendOcrLinesOnReceive { get; private set; } // = false;
+    public static bool SendOcrLinesOnReceive { get; private set; } = true;
 
     public static void Load()
     {
