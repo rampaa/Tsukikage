@@ -55,6 +55,17 @@ internal static class OcrUtils
             {
                 s_outputDelayTimer.Enabled = false;
             }
+            else if (ConfigManager.SendOcrLinesOnReceive && ConfigManager.OutputType is OutputPayload.GraphemeInfo)
+            {
+                foreach (Paragraph paragraph in ocrResult.Paragraphs)
+                {
+                    foreach (Line line in paragraph.Lines)
+                    {
+                        GraphemeInfo graphemeInfo = new(-1, line.Text, line.WritingDirection is WritingDirection.TopToBottomRightToLeft);
+                        SendOutput(JsonSerializer.Serialize(graphemeInfo, OcrResultJsonContext.Default.GraphemeInfo));
+                    }
+                }
+            }
 
             textHookerTextNode = s_textHookerTextBacklog.First;
             s_ocrTextChanged = true;

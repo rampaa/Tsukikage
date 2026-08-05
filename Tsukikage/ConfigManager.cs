@@ -68,6 +68,13 @@ internal static class ConfigManager
         ; Default value: {DefaultOutputWebSocketAddress}
         """;
 
+    private const string SendOcrLinesOnReceiveComment =
+        """
+        ; Whether OCR lines should be sent automatically when an OCR result is received.
+        ; Only applies when OutputPayload is GraphemeInfo. GraphemeStartIndex will be -1.
+        ; Default value: false
+        """;
+
     private const string IniFileContent =
         $"""
         [{GeneralSection}]
@@ -93,6 +100,9 @@ internal static class ConfigManager
 
         {OutputWebSocketAddressComment}
         {nameof(OutputWebSocketAddress)} = {DefaultOutputWebSocketAddress}
+
+        {SendOcrLinesOnReceiveComment}
+        {nameof(SendOcrLinesOnReceive)} = false
         """;
 
     #endregion
@@ -107,6 +117,7 @@ internal static class ConfigManager
     public static double OutputDelayInMilliseconds { get; private set; } // = 0;
     public static OutputIpcMethod OutputIpcMethod { get; private set; } = OutputIpcMethod.WebSocket;
     public static Uri OutputWebSocketAddress { get; private set; } = new(DefaultOutputWebSocketAddress, UriKind.Absolute);
+    public static bool SendOcrLinesOnReceive { get; private set; } // = false;
 
     public static void Load()
     {
@@ -133,6 +144,7 @@ internal static class ConfigManager
         OutputDelayInMilliseconds = GetConfigValue(nameof(OutputDelayInMilliseconds), OutputDelayInMilliseconds, OutputDelayInMillisecondsComment, outputSection);
         OutputIpcMethod = GetEnumConfigValue(nameof(OutputIpcMethod), OutputIpcMethod, OutputIpcMethodComment, outputSection);
         OutputWebSocketAddress = GetWebSocketConfigValue(nameof(OutputWebSocketAddress), OutputWebSocketAddress, OutputWebSocketAddressComment, outputSection);
+        SendOcrLinesOnReceive = GetConfigValue(nameof(SendOcrLinesOnReceive), SendOcrLinesOnReceive, SendOcrLinesOnReceiveComment, outputSection);
 
         string tempConfigFilePath = PathUtils.GetTempPath(AppInfo.ConfigFilePath);
         config.SaveToFile(tempConfigFilePath);
@@ -236,6 +248,7 @@ internal static class ConfigManager
             Output Delay: {OutputDelayInMilliseconds} ms
             Output Method: {OutputIpcMethod}
             Output WebSocket Address: {OutputWebSocketAddress.OriginalString}
+            Send OCR Lines On Receive: {SendOcrLinesOnReceive}
             """;
     }
 }
