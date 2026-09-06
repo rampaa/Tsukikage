@@ -102,12 +102,22 @@ internal sealed class WebSocketClientConnection : IDisposable
                                 else if (result.MessageType is WebSocketMessageType.Close)
                                 {
                                     Debug.WriteLine("WebSocket server is closed");
+                                    if (!textHookerConnection)
+                                    {
+                                        OcrUtils.OcrResult = null;
+                                    }
+
                                     break;
                                 }
                             }
                             catch (WebSocketException webSocketException)
                             {
                                 await Console.Error.WriteLineAsync($"WebSocket server is closed unexpectedly\n{webSocketException}").ConfigureAwait(false);
+                                if (!textHookerConnection)
+                                {
+                                    OcrUtils.OcrResult = null;
+                                }
+
                                 break;
                             }
                         }
@@ -126,12 +136,21 @@ internal sealed class WebSocketClientConnection : IDisposable
                 catch (OperationCanceledException)
                 {
                     await Console.Error.WriteLineAsync("WebSocket connection was cancelled.").ConfigureAwait(false);
+                    if (!textHookerConnection)
+                    {
+                        OcrUtils.OcrResult = null;
+                    }
                     return;
                 }
 
                 catch (Exception ex)
                 {
                     await Console.Error.WriteLineAsync($"An unexpected error occured while listening the websocket server at {_webSocketUri}\n{ex}").ConfigureAwait(false);
+                    if (!textHookerConnection)
+                    {
+                        OcrUtils.OcrResult = null;
+                    }
+
                     return;
                 }
             }

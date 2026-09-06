@@ -92,12 +92,6 @@ internal static class OcrUtils
                 textHookerTextNode = null;
             }
 
-            if (OcrResult is not null && OwocrUtils.IsOwocrStopped())
-            {
-                OwocrUtils.HandleOwocrExiting();
-                return;
-            }
-
             ocrResult = OcrResult;
         }
 
@@ -338,12 +332,6 @@ internal static class OcrUtils
         OcrResult? ocrResult = OcrResult;
         if (ocrResult is null)
         {
-            return;
-        }
-
-        if (OwocrUtils.IsOwocrStopped())
-        {
-            OwocrUtils.HandleOwocrExiting();
             return;
         }
 
