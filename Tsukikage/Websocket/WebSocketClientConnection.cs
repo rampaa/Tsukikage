@@ -105,6 +105,7 @@ internal sealed class WebSocketClientConnection : IDisposable
                                     if (!textHookerConnection)
                                     {
                                         OcrUtils.OcrResult = null;
+                                        OcrUtils.SendEmptyString();
                                     }
 
                                     break;
@@ -116,6 +117,7 @@ internal sealed class WebSocketClientConnection : IDisposable
                                 if (!textHookerConnection)
                                 {
                                     OcrUtils.OcrResult = null;
+                                    OcrUtils.SendEmptyString();
                                 }
 
                                 break;
@@ -139,6 +141,7 @@ internal sealed class WebSocketClientConnection : IDisposable
                     if (!textHookerConnection)
                     {
                         OcrUtils.OcrResult = null;
+                        OcrUtils.SendEmptyString();
                     }
                     return;
                 }
@@ -149,6 +152,7 @@ internal sealed class WebSocketClientConnection : IDisposable
                     if (!textHookerConnection)
                     {
                         OcrUtils.OcrResult = null;
+                        OcrUtils.SendEmptyString();
                     }
 
                     return;
