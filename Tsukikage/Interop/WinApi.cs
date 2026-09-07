@@ -466,11 +466,13 @@ internal static partial class WinApi
                 {
                     if (!EmptyClipboard())
                     {
+                        Thread.Sleep(sleepDuration);
                         continue;
                     }
 
                     if (SetClipboardData(CF_UNICODETEXT, hMem) is 0)
                     {
+                        Thread.Sleep(sleepDuration);
                         continue;
                     }
 
