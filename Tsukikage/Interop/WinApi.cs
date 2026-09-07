@@ -455,8 +455,8 @@ internal static partial class WinApi
                 Marshal.Copy(chars, 0, ptr, chars.Length);
                 Marshal.WriteInt16(ptr, chars.Length * sizeof(char), 0);
 
-                _ = GlobalUnlock(hMem);
-                if (Marshal.GetLastWin32Error() is not 0 || !OpenClipboard(0))
+                bool globalUnlockSucceeded = GlobalUnlock(hMem);
+                if ((!globalUnlockSucceeded && Marshal.GetLastWin32Error() is not 0) || !OpenClipboard(0))
                 {
                     Thread.Sleep(sleepDuration);
                     continue;
